@@ -1,5 +1,6 @@
 ---
 title: "Hands-on Exercise 1: Geospatial Data Wrangling with R"
+author: "Widya Tantiya Yutika"
 editor: visual
 date: "17 November 2023"
 date-modified: "last-modified"
