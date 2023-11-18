@@ -17,6 +17,56 @@ In this in-class exercise, I learn how to import and wrangling geospatial data u
 
 ## Getting Started
 
+The code chunk below load the following packages:
+
+-   tmap: for thematic mapping
+
+-   sf: for geospatial data handling
+
+-   tidyverse: non-spatial data handling
+
 ```{r}
 pacman::p_load(tmap, sf, tidyverse)
+```
+
+## Preparing the Flow Data
+
+## Importing the OD Data
+
+Firstly, we will import the *Passenger Volume by Origin Destination Bus Stops* data set downloaded from LTA DataMall by using read_csv() of **readr** package.
+
+```{r}
+# eval:false
+odbus <- read_csv("data/aspatial/origin_destination_bus_202308.csv")
+```
+
+### Extracting the study data
+
+```{r}
+#eval: false
+odbus$ORIGIN_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
+odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE)
+```
+
+```{r}
+# eval: false
+origtrip_7_9 <- odbus %>%
+  filter(DAY_TYPE=="WEEKDAY") %>%
+  filter(TIME_PER_HOUR >= 7 &
+           TIME_PER_HOUR <=9) %>%
+  group_by(ORIGIN_PT_CODE) %>%
+  summarise(TRIPS=sum(TOTAL_TRIPS))
+```
+
+Two geospatial data will be used in this exercise, they are:
+
+```{r}
+busstop <- st_read(dsn="data/geospatial", layer="BusStop") %>%
+  st_transform(crs=3414)
+```
+
+```{r}
+mpsz <- st_read(dsn="data/geospatial", layer="MPSZ-2019") %>%
+  st_transform(crs=3414)
+mpsz
 ```

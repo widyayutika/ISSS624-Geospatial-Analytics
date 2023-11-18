@@ -6,9 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Widya Tantiya Yutika">
 <meta name="dcterms.date" content="2023-11-18">
 
-<title>ISSS624 - Applied Geospatial Analytics - Hands-on_Ex8: Spatial Weights and Applications</title>
+<title>ISSS624 - Applied Geospatial Analytics - Hands-on_Ex9</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,40 +21,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -199,21 +166,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview"><span class="header-section-number">1</span> Overview</a></li>
-  <li><a href="#the-study-area-and-data" id="toc-the-study-area-and-data" class="nav-link" data-scroll-target="#the-study-area-and-data"><span class="header-section-number">2</span> The Study Area and Data</a>
-  <ul class="collapse">
-  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started"><span class="header-section-number">2.1</span> <strong>Getting Started</strong></a></li>
-  </ul></li>
-  <li><a href="#getting-the-data-into-r-environment" id="toc-getting-the-data-into-r-environment" class="nav-link" data-scroll-target="#getting-the-data-into-r-environment"><span class="header-section-number">3</span> <strong>Getting the Data Into R Environment</strong></a>
-  <ul class="collapse">
-  <li><a href="#import-shapefile-into-r-environment" id="toc-import-shapefile-into-r-environment" class="nav-link" data-scroll-target="#import-shapefile-into-r-environment"><span class="header-section-number">3.1</span> <strong>Import shapefile into r environment</strong></a></li>
-  <li><a href="#import-csv-file-into-r-environment" id="toc-import-csv-file-into-r-environment" class="nav-link" data-scroll-target="#import-csv-file-into-r-environment"><span class="header-section-number">3.2</span> <strong>Import csv file into r environment</strong></a></li>
-  <li><a href="#performing-relational-join" id="toc-performing-relational-join" class="nav-link" data-scroll-target="#performing-relational-join"><span class="header-section-number">3.3</span> <strong>Performing relational join</strong></a></li>
-  </ul></li>
-  <li><a href="#visualising-regional-development-indicator" id="toc-visualising-regional-development-indicator" class="nav-link" data-scroll-target="#visualising-regional-development-indicator"><span class="header-section-number">4</span> <strong>Visualising Regional Development Indicator</strong></a></li>
-  <li><a href="#computing-contiguity-spatial-weights" id="toc-computing-contiguity-spatial-weights" class="nav-link" data-scroll-target="#computing-contiguity-spatial-weights"><span class="header-section-number">5</span> <strong>Computing Contiguity Spatial Weights</strong></a>
-  <ul class="collapse">
-  <li><a href="#computing-queen-contiguity-based-neighbours" id="toc-computing-queen-contiguity-based-neighbours" class="nav-link" data-scroll-target="#computing-queen-contiguity-based-neighbours"><span class="header-section-number">5.1</span> <strong>Computing (QUEEN) contiguity based neighbours</strong></a></li>
-  </ul></li>
+  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started"><span class="header-section-number">2</span> Getting Started</a></li>
   </ul>
 </nav>
     </div>
@@ -222,13 +175,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Hands-on_Ex8: Spatial Weights and Applications</h1>
+<h1 class="title">Hands-on_Ex9</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Widya Tantiya Yutika </p>
+          </div>
+  </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
@@ -251,86 +210,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="overview"><span class="header-section-number">1</span> Overview</h2>
-<p>In this hands-on exercise, I will learn how to compute spatial weights using R including:</p>
-<ul>
-<li><p>import geospatial data using appropriate function(s) of <strong>sf</strong> package,</p></li>
-<li><p>import csv file using appropriate function of <strong>readr</strong> package,</p></li>
-<li><p>perform relational join using appropriate join function of <strong>dplyr</strong> package,</p></li>
-<li><p>compute spatial weights using appropriate functions of <strong>spdep</strong> package, and</p></li>
-<li><p>calculate spatially lagged variables using appropriate functions of <strong>spdep</strong> package.</p></li>
-</ul>
 </section>
-<section id="the-study-area-and-data" class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="the-study-area-and-data"><span class="header-section-number">2</span> The Study Area and Data</h2>
-<p>Two data sets will be used in this hands-on exercise, they are:</p>
-<ul>
-<li><p>Hunan county boundary layer. This is a geospatial data set in ESRI shapefile format.</p></li>
-<li><p>Hunan_2012.csv: This csv file contains selected Hunan’s local development indicators in 2012.</p></li>
-</ul>
-<section id="getting-started" class="level3" data-number="2.1">
-<h3 data-number="2.1" class="anchored" data-anchor-id="getting-started"><span class="header-section-number">2.1</span> <strong>Getting Started</strong></h3>
-<p>Before we get started, we need to ensure that&nbsp;<strong>spdep</strong>,&nbsp;<strong>sf</strong>,&nbsp;<strong>tmap, knitr</strong>&nbsp;and&nbsp;<strong>tidyverse</strong>&nbsp;packages of R are currently installed in your R.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spdep, tmap, tidyverse, knitr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-</section>
-<section id="getting-the-data-into-r-environment" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="getting-the-data-into-r-environment"><span class="header-section-number">3</span> <strong>Getting the Data Into R Environment</strong></h2>
-<p>In this section, you will learn how to bring a geospatial data and its associated attribute table into R environment. The geospatial data is in ESRI shapefile format and the attribute table is in csv fomat.</p>
-<section id="import-shapefile-into-r-environment" class="level3" data-number="3.1">
-<h3 data-number="3.1" class="anchored" data-anchor-id="import-shapefile-into-r-environment"><span class="header-section-number">3.1</span> <strong>Import shapefile into r environment</strong></h3>
-<p>The code chunk below uses&nbsp;<a href="https://r-spatial.github.io/sf/reference/st_read.html"><em>st_read()</em></a>&nbsp;of&nbsp;<strong>sf</strong>&nbsp;package to import Hunan shapefile into R. The imported shapefile will be&nbsp;<strong>simple features</strong>&nbsp;Object of&nbsp;<strong>sf</strong>.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#hunan &lt;- st_read(dsn = "data/geospatial", layer = "Hunan")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="import-csv-file-into-r-environment" class="level3" data-number="3.2">
-<h3 data-number="3.2" class="anchored" data-anchor-id="import-csv-file-into-r-environment"><span class="header-section-number">3.2</span> <strong>Import csv file into r environment</strong></h3>
-<p>Next, we will import&nbsp;<em>Hunan_2012.csv</em>&nbsp;into R by using&nbsp;<em>read_csv()</em>&nbsp;of&nbsp;<strong>readr</strong>&nbsp;package. The output is R dataframe class.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#hunan2012 &lt;- read_csv("data/aspatial/Hunan_2012.csv")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="performing-relational-join" class="level3" data-number="3.3">
-<h3 data-number="3.3" class="anchored" data-anchor-id="performing-relational-join"><span class="header-section-number">3.3</span> <strong>Performing relational join</strong></h3>
-<p>The code chunk below will be used to update the attribute table of&nbsp;<em>hunan</em>’s SpatialPolygonsDataFrame with the attribute fields of&nbsp;<em>hunan2012</em>&nbsp;dataframe. This is performed by using&nbsp;<em>left_join()</em>&nbsp;of&nbsp;<strong>dplyr</strong>&nbsp;package.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#hunan &lt;- left_join(hunan,hunan2012)%&gt;%</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  select(1:4, 7, 15)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-</section>
-<section id="visualising-regional-development-indicator" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="visualising-regional-development-indicator"><span class="header-section-number">4</span> <strong>Visualising Regional Development Indicator</strong></h2>
-<p>Now, we are going to prepare a basemap and a choropleth map showing the distribution of GDPPC 2012 by using&nbsp;<em>qtm()</em>&nbsp;of&nbsp;<strong>tmap</strong>&nbsp;package.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#basemap &lt;- tm_shape(hunan) +</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a> <span class="co"># tm_polygons() +</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#tm_text("NAME_3", size=0.5)</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#gdppc &lt;- qtm(hunan, "GDPPC")</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#tmap_arrange(basemap, gdppc, asp=1, ncol=2)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="computing-contiguity-spatial-weights" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="computing-contiguity-spatial-weights"><span class="header-section-number">5</span> <strong>Computing Contiguity Spatial Weights</strong></h2>
-<p>n this section, you will learn how to use&nbsp;<a href="https://r-spatial.github.io/spdep/reference/poly2nb.html"><em>poly2nb()</em></a>&nbsp;of&nbsp;<strong>spdep</strong>&nbsp;package to compute contiguity weight matrices for the study area. This function builds a neighbours list based on regions with contiguous boundaries. If you look at the documentation you will see that you can pass a “queen” argument that takes TRUE or FALSE as options. If you do not specify this argument the default is set to TRUE, that is, if you don’t specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.</p>
-<section id="computing-queen-contiguity-based-neighbours" class="level3" data-number="5.1">
-<h3 data-number="5.1" class="anchored" data-anchor-id="computing-queen-contiguity-based-neighbours"><span class="header-section-number">5.1</span> <strong>Computing (QUEEN) contiguity based neighbours</strong></h3>
-<p>The code chunk below is used to compute Queen contiguity weight matrix.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_q &lt;- poly2nb(hunan, queen=TRUE)</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#summary(wm_q)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one heighbours.</p>
-<p>For each polygon in our polygon object, <em>wm_q</em> lists all neighboring polygons. For example, to see the neighbors for the first polygon in the object, type:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#wm_q[[1]]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="getting-started" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="getting-started"><span class="header-section-number">2</span> Getting Started</h2>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
