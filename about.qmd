@@ -2,8 +2,6 @@
 title: "About"
 ---
 
-About this site
+This website is a learning journey of a student from Singapore Management University(SMU) in Master of IT in Business (MITB) program.
 
-```{r}
-1 + 1
-```
+The course materials are from ISSS624 - Applied Geospatial Analytics.

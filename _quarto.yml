@@ -2,26 +2,51 @@ project:
   type: website
 
 website:
-  title: "ISSS624"
+  title: "ISSS624 - Applied Geospatial Analytics"
   navbar:
+    background: "#9eb5f7"
+    search: true
     left: 
       - text: Hands-on Exercise
         menu: 
         - text: Hands-on Exercise 1
-          href: Hands-on_Ex1/Hands-on_Ex1.qmd
+          href: Hands-on_Exercise/Hands-on_Ex1/Hands-on_Ex1.qmd
         - text: Hands-on Exercise 2
-          href: Hands-on_Ex2/Hands-on_Ex2.qmd
+          href: Hands-on_Exercise/Hands-on_Ex2/Hands-on_Ex2.qmd
+        - text: Hands-on Exercise 3
+        - text: Hands-on Exercise 4
+        - text: Hands-on Exercise 5
+        - text: Hands-on Exercise 6
+        - text: Hands-on Exercise 7
+        - text: Hands-on Exercise 8
+        - text: Hands-on Exercise 9
+        - text: Hands-on Exercise 10
+      - text: In-class Exercise
+        menu: 
+        - text: In-class Exercise 1
+          href: In-class_Exercise/In-class_Ex1/In-class_Ex1.qmd
+        - text: In-class Exercise 2
+        - text: In-class Exercise 3
+        - text: In-class Exercise 4
+        - text: In-class Exercise 5
+      - text: Take-home Exercise
+        menu: 
+        - text: Take-home Exercise 1
+        - text: Take-home Exercise 2
         
     right:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+      - text: Home
+        href: index.qmd
+      - text: About
+        href: about.qmd
 
 format:
   html:
     theme: cosmo
     css: styles.css
     toc: true
+    toc-title: "Table of Contents"
+    number-sections: true
 
 editor: visual
 

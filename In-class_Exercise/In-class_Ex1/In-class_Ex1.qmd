@@ -1,0 +1,10 @@
+---
+title: "In-class_Ex1"
+editor: visual
+date: "18 November 2023"
+date-modified: "last-modified"
+---
+
+## Overview
+
+In this in-class exercise, I learn how to import and wrangling geospatial data using appropriate R packages.
