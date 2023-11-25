@@ -157,7 +157,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex1/In-class_Ex1.html" rel="" target="">
  <span class="dropdown-text">In-class Exercise 1</span></a>
   </li>  
-        <li class="dropdown-header">In-class Exercise 2</li>
+        <li>
+    <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex2/In-class_Ex2.html" rel="" target="">
+ <span class="dropdown-text">In-class Exercise 2</span></a>
+  </li>  
         <li class="dropdown-header">In-class Exercise 3</li>
         <li class="dropdown-header">In-class Exercise 4</li>
         <li class="dropdown-header">In-class Exercise 5</li>
@@ -361,9 +364,11 @@ dbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...
 </section>
 <section id="computing-contiguity-spatial-weights" class="level2" data-number="5">
 <h2 data-number="5" class="anchored" data-anchor-id="computing-contiguity-spatial-weights"><span class="header-section-number">5</span> <strong>Computing Contiguity Spatial Weights</strong></h2>
-<p>n this section, you will learn how to use&nbsp;<a href="https://r-spatial.github.io/spdep/reference/poly2nb.html"><em>poly2nb()</em></a>&nbsp;of&nbsp;<strong>spdep</strong>&nbsp;package to compute contiguity weight matrices for the study area. This function builds a neighbours list based on regions with contiguous boundaries. If you look at the documentation you will see that you can pass a “queen” argument that takes TRUE or FALSE as options. If you do not specify this argument the default is set to TRUE, that is, if you don’t specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.</p>
+<p>In this section, you will learn how to use&nbsp;<a href="https://r-spatial.github.io/spdep/reference/poly2nb.html"><em>poly2nb()</em></a>&nbsp;of&nbsp;<strong>spdep</strong>&nbsp;package to compute contiguity weight matrices for the study area. This function builds a neighbours list based on regions with contiguous boundaries. If you look at the documentation you will see that you can pass a “queen” argument that takes TRUE or FALSE as options. If you do not specify this argument the default is set to TRUE, that is, if you don’t specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.</p>
 <section id="computing-queen-contiguity-based-neighbours" class="level3" data-number="5.1">
 <h3 data-number="5.1" class="anchored" data-anchor-id="computing-queen-contiguity-based-neighbours"><span class="header-section-number">5.1</span> <strong>Computing (QUEEN) contiguity based neighbours</strong></h3>
+<p>Below are the concept of QUEEN contiguity.</p>
+<p><img src="data/aspatial/Continuity_Neighbor.png" class="img-fluid"></p>
 <p>The code chunk below is used to compute Queen contiguity weight matrix.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(hunan, <span class="at">queen=</span><span class="cn">TRUE</span>)</span>
@@ -384,7 +389,7 @@ Link number distribution:
 85 with 11 links</code></pre>
 </div>
 </div>
-<p>The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one heighbours.</p>
+<p>The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one neighbours.</p>
 <p>For each polygon in our polygon object, <em>wm_q</em> lists all neighboring polygons. For example, to see the neighbors for the first polygon in the object, type:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>wm_q[[<span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -393,7 +398,7 @@ Link number distribution:
 </div>
 </div>
 <p>Polygon 1 has 5 neighbors. The numbers represent the polygon IDs as stored in hunan SpatialPolygonsDataFrame class.</p>
-<p>We can retrive the county name of Polygon ID=1 by using the code chunk below:</p>
+<p>We can retrieve the county name of Polygon ID=1 by using the code chunk below:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>hunan<span class="sc">$</span>County[<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -579,6 +584,9 @@ Link number distribution:
 <p><img src="Hands-on_Ex8_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<p>Notes:</p>
+<p>pch: plot character (pch=19 means solid circles as plotting symbol)</p>
+<p>cex: character expansion (True: add points to existing plot, FALSE: start a new plot)</p>
 </section>
 <section id="plotting-rook-contiguity-based-neighbours-map" class="level4" data-number="5.3.2">
 <h4 data-number="5.3.2" class="anchored" data-anchor-id="plotting-rook-contiguity-based-neighbours-map"><span class="header-section-number">5.3.2</span> Plotting Rook contiguity based neighbours map</h4>
@@ -1326,7 +1334,7 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 [1] 0.125 0.125 0.125 0.125 0.125 0.125 0.125 0.125</code></pre>
 </div>
 </div>
-<p>Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor’s income will be multiplied by 0.2 before being tallied.</p>
+<p>Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor’s income will be multiplied by 0.125 before being tallied.</p>
 <p>Using the same method, we can also derive a row standardised distance weight matrix by using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>rswm_ids <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">glist=</span>ids, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
@@ -1359,6 +1367,7 @@ B 88 7744 8.786867 0.3776535 3.8137</code></pre>
 0.008218 0.015088 0.018739 0.019614 0.022823 0.040338 </code></pre>
 </div>
 </div>
+<p>Notes: B is the basic binary coding, W is row standardised (sums over all links to n).</p>
 </section>
 </section>
 <section id="application-of-spatial-weight-matrix" class="level2" data-number="8">

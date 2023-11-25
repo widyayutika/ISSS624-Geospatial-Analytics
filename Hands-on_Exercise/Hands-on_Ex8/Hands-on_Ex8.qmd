@@ -79,9 +79,13 @@ tmap_arrange(basemap, gdppc, asp=1, ncol=2)
 
 ## **Computing Contiguity Spatial Weights**
 
-n this section, you will learn how to use [*poly2nb()*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to compute contiguity weight matrices for the study area. This function builds a neighbours list based on regions with contiguous boundaries. If you look at the documentation you will see that you can pass a "queen" argument that takes TRUE or FALSE as options. If you do not specify this argument the default is set to TRUE, that is, if you don't specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.
+In this section, you will learn how to use [*poly2nb()*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to compute contiguity weight matrices for the study area. This function builds a neighbours list based on regions with contiguous boundaries. If you look at the documentation you will see that you can pass a "queen" argument that takes TRUE or FALSE as options. If you do not specify this argument the default is set to TRUE, that is, if you don't specify queen = FALSE this function will return a list of first order neighbours using the Queen criteria.
 
 ### **Computing (QUEEN) contiguity based neighbours**
+
+Below are the concept of QUEEN contiguity.
+
+![](data/aspatial/Continuity_Neighbor.png)
 
 The code chunk below is used to compute Queen contiguity weight matrix.
 
@@ -90,7 +94,7 @@ wm_q <- poly2nb(hunan, queen=TRUE)
 summary(wm_q)
 ```
 
-The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one heighbours.
+The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one neighbours.
 
 For each polygon in our polygon object, *wm_q* lists all neighboring polygons. For example, to see the neighbors for the first polygon in the object, type:
 
@@ -100,7 +104,7 @@ wm_q[[1]]
 
 Polygon 1 has 5 neighbors. The numbers represent the polygon IDs as stored in hunan SpatialPolygonsDataFrame class.
 
-We can retrive the county name of Polygon ID=1 by using the code chunk below:
+We can retrieve the county name of Polygon ID=1 by using the code chunk below:
 
 ```{r}
 hunan$County[1]
@@ -179,6 +183,12 @@ head(coords)
 plot(hunan$geometry, border="lightgrey")
 plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
 ```
+
+Notes:
+
+pch: plot character (pch=19 means solid circles as plotting symbol)
+
+cex: character expansion (True: add points to existing plot, FALSE: start a new plot)
 
 #### Plotting Rook contiguity based neighbours map
 
@@ -337,7 +347,7 @@ To see the weight of the first polygon's eight neighbors type:
 rswm_q$weights[10]
 ```
 
-Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor's income will be multiplied by 0.2 before being tallied.
+Each neighbor is assigned a 0.125 of the total weight. This means that when R computes the average neighboring income values, each neighbor's income will be multiplied by 0.125 before being tallied.
 
 Using the same method, we can also derive a row standardised distance weight matrix by using the code chunk below.
 
@@ -353,6 +363,8 @@ rswm_ids$weights[1]
 ```{r}
 summary(unlist(rswm_ids$weights))
 ```
+
+Notes: B is the basic binary coding, W is row standardised (sums over all links to n).
 
 ## **Application of Spatial Weight Matrix**
 
