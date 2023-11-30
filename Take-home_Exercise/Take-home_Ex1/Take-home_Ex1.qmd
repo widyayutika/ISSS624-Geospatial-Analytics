@@ -1,0 +1,319 @@
+---
+title: "Take-home_Ex1: Public Bus Passengers in Singapore"
+author: "Widya Tantiya Yutika"
+date: "29 November 2023"
+date-modified: "last-modified"
+format: html
+execute: 
+  echo: true
+  eval: true
+  warning: false
+editor: visual
+---
+
+The purpose of this exercise is to understand the spatial and spatio-temporal mobility patterns of public bus passengers in Singapore.
+
+## Setting up
+
+### **The Study Area and Data**
+
+Two data sets will be used in this take-home exercise, they are:
+
+-   *Bus Stop Location* from LTA DataMall. It provides information about all the bus stops currently being serviced by buses, including the bus stop code (identifier) and location coordinates.
+
+-   *hexagon*, a [hexagon](https://desktop.arcgis.com/en/arcmap/latest/tools/spatial-statistics-toolbox/h-whyhexagons.htm) layer of 250m (this distance is the perpendicular distance between the centre of the hexagon and its edges.) should be used to replace the relative coarse and irregular Master Plan 2019 Planning Sub-zone GIS data set of URA.
+
+### **Setting the Analytical Tools**
+
+Before we get started, we need to ensure that **spdep**, **sf**, **tmap** and **tidyverse** packages of R are currently installed in your R.
+
+-   sf is use for importing and handling geospatial data in R,
+
+-   tidyverse is mainly use for wrangling attribute data in R,
+
+-   spdep will be used to compute spatial weights, global and local spatial autocorrelation statistics, and
+
+-   tmap will be used to prepare cartographic quality chropleth map.
+
+The code chunk below is used to perform the following tasks:
+
+-   creating a package list containing the necessary R packages,
+
+-   checking if the R packages in the package list have been installed in R,
+
+    -   if they have yet to be installed, RStudio will installed the missing packages,
+
+-   launching the packages into R environment.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr, hexbin, mapview)
+```
+
+## **Getting the Data Into R Environment**
+
+### **Import shapefile into r environment**
+
+The code chunk below uses [*st_read()*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import BusStop shapefile into R. The imported shapefile will be **simple features** Object of **sf**.
+
+```{r}
+busstop <- st_read(dsn = "data/geospatial", layer = "BusStop")
+```
+
+### **Import csv file into r environment**
+
+Next, we will import *origin_destination_bus_202310.csv* into R by using *read_csv()* of **readr** package. The output is R dataframe class.
+
+```{r}
+origin_destination_bus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
+```
+
+## Data Wrangling
+
+### Working with st_geometry to display basic information of feature class
+
+```{r}
+st_geometry(busstop)
+```
+
+### Working with glimpse to display data type of each fields
+
+```{r}
+glimpse(busstop)
+```
+
+### Plotting Geospatial Data
+
+```{r}
+plot(busstop)
+```
+
+### Working with Projection
+
+#### Assigning EPSG code to a simple feature data frame
+
+Common issue in importing geospatial data into R: coordinate system of the source data was either missing (due to missing .proj for ESRI shapefile, etc.) or wrongly assigned.
+
+Coordinate system of busstop is shown as below:
+
+```{r}
+st_crs(busstop)
+```
+
+Both busstop and mpsz areprojected in svy21 as shown from the second line, but at the last line, it is mentioned that the EPSG is 9001. This is wrongly assigned because the correct EPSG code for svy21 is [3414](https://epsg.io/3414).
+
+```{r}
+busstop3414 <- st_set_crs(busstop, 3414)
+```
+
+```{r}
+st_crs(busstop3414)
+```
+
+Note: There is a warning mentioning replacing crs does not reproject the data, and if we want to reproject the data, we can use st_tranform().
+
+#### Transforming the projection
+
+The reason why it is essential to transform the original data from geographic coordinate system to projected coordinated system is because geographic coordinate system is not appropriate if the analysis need to use distance or/and area measurements.
+
+```{r}
+busstop3414transform <- st_transform(busstop, 3414)
+```
+
+```{r}
+st_geometry(busstop3414transform)
+```
+
+## Task 1: Geovisualisation and Analysis
+
+### Number of Trips in Origin Bus Stop
+
+The code chunk below will be used to calculate the the number of trips in each bus stop.
+
+```{r}
+total_trips_in_origin_busstop <-origin_destination_bus %>%
+  group_by(ORIGIN_PT_CODE) %>%
+  summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))
+```
+
+### Performing Relational Join
+
+The code chunk below will be used to join the busstop SpatialPolygonsDataframe and original_destination_bus by the bus stop id (BUS_STOP_N for busstop and ORIGIN_PT_CODE for original_destination_bus). This is performed by using *left_join()* of **dplyr** package.
+
+```{r}
+total_trips_in_origin_busstop <- left_join(busstop, total_trips_in_origin_busstop, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))
+```
+
+### Creating honeycomb_grid
+
+The code chunk below will be use to create a hexagonal or honeycomb grid with a 250m distance and create a grid_id for each hexagonal grid.
+
+```{r}
+area_honeycomb_grid = st_make_grid(busstop, c(250, 250), what = "polygons", square = FALSE)
+
+# To sf and add grid ID
+honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
+  # add grid ID
+  mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
+```
+
+### Spatial Join with honeycomb grid
+
+The code chunk below will be used to join the total_trips_in_origin_busstop and honeycomb grid spatially.
+
+```{r}
+# Spatially join the trip data with the honeycomb grid
+total_trips_in_origin_busstop_honeycomb <- st_join(honeycomb_grid_sf,total_trips_in_origin_busstop)
+
+
+```
+
+### Remove Grid Without any Bus Stop
+
+The code chunk below will be used to remove the grid id without
+
+```{r}
+# Remove rows with NA values in the 'bus_stop_N' column
+total_trips_in_origin_busstop_honeycomb <- total_trips_in_origin_busstop_honeycomb %>%
+  filter(!is.na(BUS_STOP_N))
+
+```
+
+### Number of Trips per Grid
+
+The code chunk below is used to calculate the sum of trips in each grid. Some grids consist of more than 1 bus stop and thus the number of trips will be summed.
+
+```{r}
+trips_per_grid <- total_trips_in_origin_busstop_honeycomb %>%
+  group_by(grid_id) %>%
+  summarise(total_trips = sum(TOTAL_TRIPS))
+```
+
+### Geovisualisation
+
+```{r}
+tmap_mode("view")
+
+map_honeycomb = tm_shape(trips_per_grid) +
+  tm_fill(
+    col = "total_trips",
+    palette = "Reds",
+    style = "cont",
+    title = "Number of Trips",
+    id = "grid_id",
+    showNA = FALSE,
+    alpha = 0.6,
+    popup.vars = c("total_trips"),
+    popup.format = list(
+      total_trips = list(format = "f", digits = 0))
+  ) +
+  tm_borders(col = "grey40", lwd = 0.7)
+
+map_honeycomb
+```
+
+### Deeper Analysis on Peak Hours
+
+We will further analyse on the peak hours:
+
+| Peak hour period             | Bus tap on time |
+|------------------------------|-----------------|
+| Weekday morning peak         | 6am to 9am      |
+| Weekday afternoon peak       | 5pm to 8pm      |
+| Weekend/holiday morning peak | 11am to 2pm     |
+| Weekend/holiday evening peak | 4pm to 7pm      |
+
+The chunk code below is to ???
+
+```{r}
+weekday_morning <- origin_destination_bus %>%
+  filter((TIME_PER_HOUR >= 6 & TIME_PER_HOUR <= 9) & DAY_TYPE == 'WEEKDAY')%>%
+  group_by(ORIGIN_PT_CODE) %>%
+  summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))
+
+weekday_afternoon <- origin_destination_bus %>%
+  filter((TIME_PER_HOUR >= 17 & TIME_PER_HOUR <= 20) & DAY_TYPE == 'WEEKDAY')%>%
+  group_by(ORIGIN_PT_CODE) %>%
+  summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))
+
+weekend_holiday_morning <- origin_destination_bus %>%
+  filter((TIME_PER_HOUR >= 11 & TIME_PER_HOUR <= 14) & DAY_TYPE == 'WEEKENDS/HOLIDAY')%>%
+  group_by(ORIGIN_PT_CODE) %>%
+  summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))
+
+weekend_holiday__evening <- origin_destination_bus %>%
+  filter((TIME_PER_HOUR >= 16 & TIME_PER_HOUR <= 19) & DAY_TYPE == 'WEEKENDS/HOLIDAY')%>%
+  group_by(ORIGIN_PT_CODE) %>%
+  summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))
+
+```
+
+### Left join
+
+```{r}
+weekday_morning <- left_join(busstop, weekday_morning, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))
+
+weekday_afternoon <- left_join(busstop, weekday_afternoon, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))
+
+weekend_holiday_morning <- left_join(busstop, weekend_holiday_morning, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))
+
+weekend_holiday__evening <- left_join(busstop, weekend_holiday__evening, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))
+
+```
+
+### Spatially join
+
+```{r}
+# Spatially join the trip data with the honeycomb grid
+#busstop_weekday_morning_honeycomb <- st_join(honeycomb_grid_sf,busstop_weekday_morning)
+
+# Remove rows with NA values in the 'bus_stop_N' column
+#busstop_weekday_morning_honeycomb <- busstop_weekday_morning_honeycomb %>%
+#  filter(!is.na(BUS_STOP_N))
+```
+
+```{r}
+# Group by grid ID and calculate the sum of TOTAL_TRIPS
+#trips_per_grid_busstop_weekday_morning <- busstop_weekday_morning_honeycomb %>%
+#  group_by(grid_id) %>%
+ # summarise(total_trips = sum(TOTAL_TRIPS))
+```
+
+```{r}
+#tmap_mode("view")
+
+#map_honeycomb = tm_shape(trips_per_grid_busstop_weekday_morning) +
+#  tm_fill(
+ #   col = "total_trips",
+ #   palette = "Reds",
+  #  style = "cont",
+  #  title = "Number of Trips",
+  #  id = "grid_id",
+   # showNA = FALSE,
+  #  alpha = 0.6,
+  #  popup.vars = c("total_trips"),
+  #  popup.format = list(
+  #    total_trips = list(format = "f", digits = 0))
+ ## ) +
+ # tm_borders(col = "grey40", lwd = 0.7)
+
+#map_honeycomb
+```
+
+```{r}
+# Check the class of the geometry column
+#class(trips_per_grid_busstop_weekday_morning$geometry)
+```
+
+```{r}
+
+#filtered_df <- origin_destination_bus %>%
+ # filter(
+  #  (TIME_PER_HOUR %in% peak_hours$`WeekdayMorningPeak` & DAY_TYPE == 'WEEKDAY') |
+   # (TIME_PER_HOUR %in% peak_hours$`WeekdayAfternoonPeak` & DAY_TYPE == 'WEEKDAY') |
+    #(TIME_PER_HOUR %in% peak_hours$`Weekend/holidayMorningPeak` & DAY_TYPE == 'WEEKENDS/HOLIDAY') |
+    #(TIME_PER_HOUR %in% peak_hours$`Weekend/holidayEveningPeak` & DAY_TYPE == 'WEEKENDS/HOLIDAY')
+  #)
+
+
+
+```
