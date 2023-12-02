@@ -354,7 +354,7 @@ total_trips_per_grid_weep <- total_trips_per_busstop_honeycomb_weep %>%
 ```{r}
 tmap_mode("view")
 
-map_honeycomb = tm_shape(total_trips_per_grid_wdmp) +
+tm_shape(total_trips_per_grid_wdmp) +
   tm_fill(
     col = "total_trips",
     palette = "Reds",
@@ -369,15 +369,14 @@ map_honeycomb = tm_shape(total_trips_per_grid_wdmp) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 
-map_honeycomb
 ```
 
 ### Weekday Afternoon Peak
 
 ```{r}
-tmap_mode("view")
+tmap_mode("plot")
 
-map_honeycomb = tm_shape(total_trips_per_grid_wdap) +
+tm_shape(total_trips_per_grid_wdap) +
   tm_fill(
     col = "total_trips",
     palette = "Reds",
@@ -392,13 +391,13 @@ map_honeycomb = tm_shape(total_trips_per_grid_wdap) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 
-map_honeycomb
 ```
 
 ### Weekends/Holiday Morning Peak
 
 ```{r}
-map_honeycomb = tm_shape(total_trips_per_grid_wemp) +
+tmap_mode("plot")
+tm_shape(total_trips_per_grid_wemp) +
   tm_fill(
     col = "total_trips",
     palette = "Reds",
@@ -413,13 +412,13 @@ map_honeycomb = tm_shape(total_trips_per_grid_wemp) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 
-map_honeycomb
 ```
 
 ### Weekends/Holiday Evening Peak
 
 ```{r}
-map_honeycomb = tm_shape(total_trips_per_grid_weep) +
+tmap_mode("view")
+tm_shape(total_trips_per_grid_weep) +
   tm_fill(
     col = "total_trips",
     palette = "Reds",
@@ -434,7 +433,6 @@ map_honeycomb = tm_shape(total_trips_per_grid_weep) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 
-map_honeycomb
 ```
 
 ANALYSIS : From the above, we can see there are more number of trip in the morning.....
@@ -454,10 +452,7 @@ wm_q <- poly2nb(total_trips_per_grid_wdmp, queen=TRUE)
 summary(wm_q)
 ```
 
-```{r}
-plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey")
-plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
-```
+There are 10 hexagonal grid with 0 neighbours and the most connected grid has 6 links.
 
 #### Contiguity Weight Matrix (ROOK)
 
@@ -466,12 +461,32 @@ wm_r <- poly2nb(total_trips_per_grid_wdmp, queen=FALSE)
 summary(wm_r)
 ```
 
+There are 10 hexagonal grid with 0 neighbours and the most connected grid has 6 links. So we should use distance-based neighbours.
+
+### Visualising contiguity weights
+
+```{r}
+longitude <- map_dbl(total_trips_per_grid_wdmp$area_honeycomb_grid, ~st_centroid(.x)[[1]])  
+latitude <- map_dbl(total_trips_per_grid_wdmp$area_honeycomb_grid, ~st_centroid(.x)[[2]])  
+coords <- cbind(longitude, latitude) 
+head(coords)
+```
+
+#### Plotting Queen and Rook Contiguity Based on Neighbours Map
+
+```{r}
+par(mfrow=c(1,2))
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey", main="Queen Contiguity")
+plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey", main="Rook Contiguity")
+plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
+```
+
 ### **Computing distance based neighbours**
 
 ### **Determine the cut-off distance**
 
 ```{r}
-coords <- coordinates(busstop3414)
 k1 <- knn2nb(knearneigh(coords))
 k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
 summary(k1dists)
@@ -479,21 +494,34 @@ summary(k1dists)
 
 #### Adaptive Distance Weight Matrix
 
+```{r}
+knn6 <- knn2nb(knearneigh(coords, k=6))
+knn6
+```
+
+#### Plotting distance based neighbours
+
+```{r}
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey")
+plot(knn6, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
+```
+
+#### Inversed Distance 
+
 ## Task 2: **Local Indicators of Spatial Association (LISA) Analysis**
 
-### **Deriving Continuity Spatial Weights: Queen\'s Method**
+### **Deriving Continuity Spatial Weights: Queen's Method**
 
-wm_q \<- hunan_GDPPC %\>%
-mutate(nb = st_contiguity(geometry),
-wt = st_weights(nb, style = "W"),
-.before=1)
+wm_q \<- hunan_GDPPC %\>% mutate(nb = st_contiguity(geometry), wt = st_weights(nb, style = "W"), .before=1)
 
 Local Indicators of Spatial Association or LISA are statistics that evaluate the existence of clusters in the spatial arrangement of a given variable.
 
-In this section, you will learn how to apply appropriate Local Indicators for Spatial Association (LISA), especially local Moran\'I to detect cluster and/or outlier from passenger trips generate by origin at hexagon level.
+In this section, you will learn how to apply appropriate Local Indicators for Spatial Association (LISA), especially local Moran'I to detect cluster and/or outlier from passenger trips generate by origin at hexagon level.
 
-The code chunks below are used to compute local Moran\'s I of Total Trips at the hexagonal grid level.
+The code chunks below are used to compute local Moran's I of Total Trips at the hexagonal grid level.
 
-fips \<- order(total_trips_per_grid_wdmp\$grid_id)
-localMI \<- localmoran(hunan\$GDPPC, rswm_q)
-head(localMI)
+fips \<- order(total_trips_per_grid_wdmp\$grid_id) localMI \<- localmoran(hunan\$GDPPC, rswm_q) head(localMI)
+
+Reproducible:
+
+just change the read_csv and the file

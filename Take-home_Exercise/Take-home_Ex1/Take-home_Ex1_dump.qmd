@@ -6,91 +6,76 @@ title: "Take-home_Ex1_dump"
 
 This section provides a comprehensive step-by step walkthrough to calculate the number of trips within each hexagonal grid during Weekday Morning Peak Hour with a subsequent plan to replicate the same process for Weekday Afternoon Peak Hour, Weekends/Holiday Morning Peak, and Weekends/Holiday Evening Peak in the subsequent section
 
-#### Calculating Number of Trips in each Bus Stop (Including Both Origin and Destination Flow) 
+#### Calculating Number of Trips in each Bus Stop (Including Both Origin and Destination Flow)
 
 The code chunk below will be used to calculate the the number of trips in each origin bus stop.
 
-```{r} odbus_weekday_6_9_ori <- odbus_weekday_6_9 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKDAY_MORNING_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))}
-```
+`{r} odbus_weekday_6_9_ori <- odbus_weekday_6_9 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKDAY_MORNING_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))}`
 
 The code chunk below will be used to calculate the the number of trips in each destination bus stop.
 
-```{r} odbus_weekday_6_9_des <- odbus_weekday_6_9 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKDAY_MORNING_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))}
-```
+`{r} odbus_weekday_6_9_des <- odbus_weekday_6_9 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKDAY_MORNING_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))}`
 
 The code chunk below will be used to combine both origin and destination trips in each bus stop and rename the ORIGIN_PT_CODE to BUS_STOP_ID.
 
-```{r} odbus_weekday_6_9_data <- full_join(odbus_weekday_6_9_ori , odbus_weekday_6_9_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)}
-```
+`{r} odbus_weekday_6_9_data <- full_join(odbus_weekday_6_9_ori , odbus_weekday_6_9_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)}`
 
 Next, I will calculate the total trips from both origin and destination trips by summing both the columns.
 
-```{r} odbus_weekday_6_9_data$WEEKDAY_MORNING_TRIPS <- with(odbus_weekday_6_9_data,    ifelse(is.na(WEEKDAY_MORNING_ORI), 0, WEEKDAY_MORNING_ORI) +   ifelse(is.na(WEEKDAY_MORNING_DES), 0, WEEKDAY_MORNING_DES) )}
-```
+`{r} odbus_weekday_6_9_data$WEEKDAY_MORNING_TRIPS <- with(odbus_weekday_6_9_data,    ifelse(is.na(WEEKDAY_MORNING_ORI), 0, WEEKDAY_MORNING_ORI) +   ifelse(is.na(WEEKDAY_MORNING_DES), 0, WEEKDAY_MORNING_DES) )}`
 
 Taking a glimpse of the odbus_weekday_6_9_data to make sure that the code chunk above are correct.
 
-```{r} glimpse(odbus_weekday_6_9_data)}
-```
+`{r} glimpse(odbus_weekday_6_9_data)}`
 
 #### Performing Relational Join
 
 The code chunk below will be used to join the busstop3414 SpatialPolygonsDataframe and odbus_weekday_6_9_data by BUS_STOP_N for busstop3414 and BUS_STOP_ID for original_destination_bus). This is performed by using *left_join()* of **dplyr** package.
 
-```{r} total_trips_per_busstop_wdmp <- left_join(busstop3414, odbus_weekday_6_9_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))}
-```
+`{r} total_trips_per_busstop_wdmp <- left_join(busstop3414, odbus_weekday_6_9_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))}`
 
 #### Spatial Join with honeycomb grid
 
 The code chunk below will be used to join the total_trips_per_busstop and honeycomb grid spatially and remove the grid without any busstop (remove rows with NA value on the BUS_STOP_N).
 
-```{r} total_trips_per_busstop_honeycomb_wdmp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdmp) %>%   filter(!is.na(BUS_STOP_N))}
-```
+`{r} total_trips_per_busstop_honeycomb_wdmp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdmp) %>%   filter(!is.na(BUS_STOP_N))}`
 
 #### Calculating Total Trips in a Hexagonal Grid
 
 The code chunk below will be used to calculate the total trips in a hexagonal grid.
 
-```{r} total_trips_per_grid_wdmp <- total_trips_per_busstop_honeycomb_wdmp %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKDAY_MORNING_TRIPS))}
-```
+`{r} total_trips_per_grid_wdmp <- total_trips_per_busstop_honeycomb_wdmp %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKDAY_MORNING_TRIPS))}`
 
 ### Replicating Steps for Other Peak Hours
 
 #### Weekday Afternoon Peak
 
-```{r} odbus_weekday_17_20_ori <- odbus_weekday_17_20 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKDAY_AFTERNOON_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekday_17_20_des <- odbus_weekday_17_20 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKDAY_AFTERNOON_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekday_17_20_data <- full_join(odbus_weekday_17_20_ori , odbus_weekday_17_20_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekday_17_20_data$WEEKDAY_AFTERNOON_TRIPS <- with(odbus_weekday_17_20_data,    ifelse(is.na(WEEKDAY_AFTERNOON_ORI), 0, WEEKDAY_AFTERNOON_ORI) +   ifelse(is.na(WEEKDAY_AFTERNOON_DES), 0, WEEKDAY_AFTERNOON_DES) )  total_trips_per_busstop_wdap <- left_join(busstop3414, odbus_weekday_17_20_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_wdap <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdap) %>%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_wdap <- total_trips_per_busstop_honeycomb_wdap %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKDAY_AFTERNOON_TRIPS))}
-```
+`{r} odbus_weekday_17_20_ori <- odbus_weekday_17_20 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKDAY_AFTERNOON_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekday_17_20_des <- odbus_weekday_17_20 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKDAY_AFTERNOON_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekday_17_20_data <- full_join(odbus_weekday_17_20_ori , odbus_weekday_17_20_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekday_17_20_data$WEEKDAY_AFTERNOON_TRIPS <- with(odbus_weekday_17_20_data,    ifelse(is.na(WEEKDAY_AFTERNOON_ORI), 0, WEEKDAY_AFTERNOON_ORI) +   ifelse(is.na(WEEKDAY_AFTERNOON_DES), 0, WEEKDAY_AFTERNOON_DES) )  total_trips_per_busstop_wdap <- left_join(busstop3414, odbus_weekday_17_20_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_wdap <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdap) %>%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_wdap <- total_trips_per_busstop_honeycomb_wdap %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKDAY_AFTERNOON_TRIPS))}`
 
 #### Weekends/Holiday Morning Peak
 
-```{r} odbus_weekend_11_14_ori <- odbus_weekend_11_14 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKEND_MORNING_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekend_11_14_des <- odbus_weekend_11_14 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKEND_MORNING_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekend_11_14_data <- full_join(odbus_weekend_11_14_ori , odbus_weekend_11_14_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekend_11_14_data$WEEKEND_MORNING_TRIPS <- with(odbus_weekend_11_14_data,    ifelse(is.na(WEEKEND_MORNING_ORI), 0, WEEKEND_MORNING_ORI) +   ifelse(is.na(WEEKEND_MORNING_DES), 0, WEEKEND_MORNING_DES) )  total_trips_per_busstop_wemp <- left_join(busstop3414, odbus_weekend_11_14_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_wemp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wemp) %>%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_wemp <- total_trips_per_busstop_honeycomb_wemp %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKEND_MORNING_TRIPS))}
-```
+`{r} odbus_weekend_11_14_ori <- odbus_weekend_11_14 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKEND_MORNING_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekend_11_14_des <- odbus_weekend_11_14 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKEND_MORNING_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekend_11_14_data <- full_join(odbus_weekend_11_14_ori , odbus_weekend_11_14_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekend_11_14_data$WEEKEND_MORNING_TRIPS <- with(odbus_weekend_11_14_data,    ifelse(is.na(WEEKEND_MORNING_ORI), 0, WEEKEND_MORNING_ORI) +   ifelse(is.na(WEEKEND_MORNING_DES), 0, WEEKEND_MORNING_DES) )  total_trips_per_busstop_wemp <- left_join(busstop3414, odbus_weekend_11_14_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_wemp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wemp) %>%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_wemp <- total_trips_per_busstop_honeycomb_wemp %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKEND_MORNING_TRIPS))}`
 
 #### Weekends/Holiday Evening Peak
 
-```{r} odbus_weekend_16_19_ori <- odbus_weekend_16_19 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKEND_EVENING_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekend_16_19_des <- odbus_weekend_16_19 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKEND_EVENING_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekend_16_19_data <- full_join(odbus_weekend_16_19_ori , odbus_weekend_16_19_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekend_16_19_data$WEEKEND_EVENING_TRIPS <- with(odbus_weekend_16_19_data,    ifelse(is.na(WEEKEND_EVENING_ORI), 0, WEEKEND_EVENING_ORI) +   ifelse(is.na(WEEKEND_EVENING_DES), 0, WEEKEND_EVENING_DES) )  total_trips_per_busstop_weep <- left_join(busstop3414, odbus_weekend_16_19_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_weep <- st_join(honeycomb_grid_sf,total_trips_per_busstop_weep) %>%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_weep <- total_trips_per_busstop_honeycomb_weep %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKEND_EVENING_TRIPS))}
-```
+`{r} odbus_weekend_16_19_ori <- odbus_weekend_16_19 %>%   group_by(ORIGIN_PT_CODE) %>%   summarise(WEEKEND_EVENING_ORI = sum(TRIPS))%>%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekend_16_19_des <- odbus_weekend_16_19 %>%   group_by(DESTINATION_PT_CODE) %>%   summarise(WEEKEND_EVENING_DES = sum(TRIPS))%>%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekend_16_19_data <- full_join(odbus_weekend_16_19_ori , odbus_weekend_16_19_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%>%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekend_16_19_data$WEEKEND_EVENING_TRIPS <- with(odbus_weekend_16_19_data,    ifelse(is.na(WEEKEND_EVENING_ORI), 0, WEEKEND_EVENING_ORI) +   ifelse(is.na(WEEKEND_EVENING_DES), 0, WEEKEND_EVENING_DES) )  total_trips_per_busstop_weep <- left_join(busstop3414, odbus_weekend_16_19_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_weep <- st_join(honeycomb_grid_sf,total_trips_per_busstop_weep) %>%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_weep <- total_trips_per_busstop_honeycomb_weep %>%   group_by(grid_id) %>%   summarise(total_trips = sum(WEEKEND_EVENING_TRIPS))}`
 
 ## Task 1: Geovisualisation and Analysis
 
 ### Weekday Afternoon Peak
 
-```{r} tmap_mode("view")  map_honeycomb = tm_shape(total_trips_per_grid_wdmp) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}
-```
+`{r} tmap_mode("view")  map_honeycomb = tm_shape(total_trips_per_grid_wdmp) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}`
 
 ### Weekday Afternoon Peak
 
-```{r} tmap_mode("view")  map_honeycomb = tm_shape(total_trips_per_grid_wdap) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}
-```
+`{r} tmap_mode("view")  map_honeycomb = tm_shape(total_trips_per_grid_wdap) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}`
 
 ### Weekends/Holiday Morning Peak
 
-```{r} map_honeycomb = tm_shape(total_trips_per_grid_wemp) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}
-```
+`{r} map_honeycomb = tm_shape(total_trips_per_grid_wemp) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}`
 
 ### Weekends/Holiday Evening Peak
 
-```{r} map_honeycomb = tm_shape(total_trips_per_grid_weep) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}
-```
+`{r} map_honeycomb = tm_shape(total_trips_per_grid_weep) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}`
 
 From the above, we can see there are more number of trip in the morning..??????

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ISSS624 - Applied Geospatial Analytics - Take-home_Ex1_dump</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">ISSS624 - Applied Geospatial Analytics</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-hands-on-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Hands-on Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-hands-on-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex1/Hands-on_Ex1.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex2/Hands-on_Ex2.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 2</span></a>
+  </li>  
+        <li class="dropdown-header">Hands-on Exercise 3</li>
+        <li class="dropdown-header">Hands-on Exercise 4</li>
+        <li class="dropdown-header">Hands-on Exercise 5</li>
+        <li class="dropdown-header">Hands-on Exercise 6</li>
+        <li class="dropdown-header">Hands-on Exercise 7</li>
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex8/Hands-on_Ex8.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 8</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex9/Hands-on_Ex9.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 9</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex10/Hands-on_Ex10.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 10</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex15/Hands-on_Ex15.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 15</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-in-class-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">In-class Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex1/In-class_Ex1.html" rel="" target="">
+ <span class="dropdown-text">In-class Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex2/In-class_Ex2.html" rel="" target="">
+ <span class="dropdown-text">In-class Exercise 2</span></a>
+  </li>  
+        <li class="dropdown-header">In-class Exercise 3</li>
+        <li class="dropdown-header">In-class Exercise 4</li>
+        <li class="dropdown-header">In-class Exercise 5</li>
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-take-home-exercise" role="button" data-bs-toggle="dropdown" aria-expanded="false" rel="" target="">
+ <span class="menu-text">Take-home Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-take-home-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../Take-home_Exercise/Take-home_Ex1/Take-home_Ex1.html" rel="" target="">
+ <span class="dropdown-text">Take-home Exercise 1</span></a>
+  </li>  
+        <li class="dropdown-header">Take-home Exercise 2</li>
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html" rel="" target="">
+ <span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of Contents</h2>
+   
+  <ul>
+  <li><a href="#further-data-wrangling-for-weekday-morning-peak-hour-a-step-by-step-guide" id="toc-further-data-wrangling-for-weekday-morning-peak-hour-a-step-by-step-guide" class="nav-link active" data-scroll-target="#further-data-wrangling-for-weekday-morning-peak-hour-a-step-by-step-guide"><span class="header-section-number">0.1</span> Further Data Wrangling for Weekday Morning Peak Hour: A Step-by-Step Guide</a></li>
+  <li><a href="#replicating-steps-for-other-peak-hours" id="toc-replicating-steps-for-other-peak-hours" class="nav-link" data-scroll-target="#replicating-steps-for-other-peak-hours"><span class="header-section-number">0.2</span> Replicating Steps for Other Peak Hours</a></li>
+  <li><a href="#task-1-geovisualisation-and-analysis" id="toc-task-1-geovisualisation-and-analysis" class="nav-link" data-scroll-target="#task-1-geovisualisation-and-analysis"><span class="header-section-number">1</span> Task 1: Geovisualisation and Analysis</a>
+  <ul class="collapse">
+  <li><a href="#weekday-afternoon-peak-1" id="toc-weekday-afternoon-peak-1" class="nav-link" data-scroll-target="#weekday-afternoon-peak-1"><span class="header-section-number">1.1</span> Weekday Afternoon Peak</a></li>
+  <li><a href="#weekday-afternoon-peak-2" id="toc-weekday-afternoon-peak-2" class="nav-link" data-scroll-target="#weekday-afternoon-peak-2"><span class="header-section-number">1.2</span> Weekday Afternoon Peak</a></li>
+  <li><a href="#weekendsholiday-morning-peak-1" id="toc-weekendsholiday-morning-peak-1" class="nav-link" data-scroll-target="#weekendsholiday-morning-peak-1"><span class="header-section-number">1.3</span> Weekends/Holiday Morning Peak</a></li>
+  <li><a href="#weekendsholiday-evening-peak-1" id="toc-weekendsholiday-evening-peak-1" class="nav-link" data-scroll-target="#weekendsholiday-evening-peak-1"><span class="header-section-number">1.4</span> Weekends/Holiday Evening Peak</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Take-home_Ex1_dump</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="further-data-wrangling-for-weekday-morning-peak-hour-a-step-by-step-guide" class="level3" data-number="0.1">
+<h3 data-number="0.1" class="anchored" data-anchor-id="further-data-wrangling-for-weekday-morning-peak-hour-a-step-by-step-guide"><span class="header-section-number">0.1</span> Further Data Wrangling for Weekday Morning Peak Hour: A Step-by-Step Guide</h3>
+<p>This section provides a comprehensive step-by step walkthrough to calculate the number of trips within each hexagonal grid during Weekday Morning Peak Hour with a subsequent plan to replicate the same process for Weekday Afternoon Peak Hour, Weekends/Holiday Morning Peak, and Weekends/Holiday Evening Peak in the subsequent section</p>
+<section id="calculating-number-of-trips-in-each-bus-stop-including-both-origin-and-destination-flow" class="level4" data-number="0.1.1">
+<h4 data-number="0.1.1" class="anchored" data-anchor-id="calculating-number-of-trips-in-each-bus-stop-including-both-origin-and-destination-flow"><span class="header-section-number">0.1.1</span> Calculating Number of Trips in each Bus Stop (Including Both Origin and Destination Flow)</h4>
+<p>The code chunk below will be used to calculate the the number of trips in each origin bus stop.</p>
+<p><code>{r} odbus_weekday_6_9_ori &lt;- odbus_weekday_6_9 %&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(WEEKDAY_MORNING_ORI = sum(TRIPS))%&gt;%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))}</code></p>
+<p>The code chunk below will be used to calculate the the number of trips in each destination bus stop.</p>
+<p><code>{r} odbus_weekday_6_9_des &lt;- odbus_weekday_6_9 %&gt;%   group_by(DESTINATION_PT_CODE) %&gt;%   summarise(WEEKDAY_MORNING_DES = sum(TRIPS))%&gt;%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))}</code></p>
+<p>The code chunk below will be used to combine both origin and destination trips in each bus stop and rename the ORIGIN_PT_CODE to BUS_STOP_ID.</p>
+<p><code>{r} odbus_weekday_6_9_data &lt;- full_join(odbus_weekday_6_9_ori , odbus_weekday_6_9_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%&gt;%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)}</code></p>
+<p>Next, I will calculate the total trips from both origin and destination trips by summing both the columns.</p>
+<p><code>{r} odbus_weekday_6_9_data$WEEKDAY_MORNING_TRIPS &lt;- with(odbus_weekday_6_9_data,    ifelse(is.na(WEEKDAY_MORNING_ORI), 0, WEEKDAY_MORNING_ORI) +   ifelse(is.na(WEEKDAY_MORNING_DES), 0, WEEKDAY_MORNING_DES) )}</code></p>
+<p>Taking a glimpse of the odbus_weekday_6_9_data to make sure that the code chunk above are correct.</p>
+<p><code>{r} glimpse(odbus_weekday_6_9_data)}</code></p>
+</section>
+<section id="performing-relational-join" class="level4" data-number="0.1.2">
+<h4 data-number="0.1.2" class="anchored" data-anchor-id="performing-relational-join"><span class="header-section-number">0.1.2</span> Performing Relational Join</h4>
+<p>The code chunk below will be used to join the busstop3414 SpatialPolygonsDataframe and odbus_weekday_6_9_data by BUS_STOP_N for busstop3414 and BUS_STOP_ID for original_destination_bus). This is performed by using&nbsp;<em>left_join()</em>&nbsp;of&nbsp;<strong>dplyr</strong>&nbsp;package.</p>
+<p><code>{r} total_trips_per_busstop_wdmp &lt;- left_join(busstop3414, odbus_weekday_6_9_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))}</code></p>
+</section>
+<section id="spatial-join-with-honeycomb-grid" class="level4" data-number="0.1.3">
+<h4 data-number="0.1.3" class="anchored" data-anchor-id="spatial-join-with-honeycomb-grid"><span class="header-section-number">0.1.3</span> Spatial Join with honeycomb grid</h4>
+<p>The code chunk below will be used to join the total_trips_per_busstop and honeycomb grid spatially and remove the grid without any busstop (remove rows with NA value on the BUS_STOP_N).</p>
+<p><code>{r} total_trips_per_busstop_honeycomb_wdmp &lt;- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdmp) %&gt;%   filter(!is.na(BUS_STOP_N))}</code></p>
+</section>
+<section id="calculating-total-trips-in-a-hexagonal-grid" class="level4" data-number="0.1.4">
+<h4 data-number="0.1.4" class="anchored" data-anchor-id="calculating-total-trips-in-a-hexagonal-grid"><span class="header-section-number">0.1.4</span> Calculating Total Trips in a Hexagonal Grid</h4>
+<p>The code chunk below will be used to calculate the total trips in a hexagonal grid.</p>
+<p><code>{r} total_trips_per_grid_wdmp &lt;- total_trips_per_busstop_honeycomb_wdmp %&gt;%   group_by(grid_id) %&gt;%   summarise(total_trips = sum(WEEKDAY_MORNING_TRIPS))}</code></p>
+</section>
+</section>
+<section id="replicating-steps-for-other-peak-hours" class="level3" data-number="0.2">
+<h3 data-number="0.2" class="anchored" data-anchor-id="replicating-steps-for-other-peak-hours"><span class="header-section-number">0.2</span> Replicating Steps for Other Peak Hours</h3>
+<section id="weekday-afternoon-peak" class="level4" data-number="0.2.1">
+<h4 data-number="0.2.1" class="anchored" data-anchor-id="weekday-afternoon-peak"><span class="header-section-number">0.2.1</span> Weekday Afternoon Peak</h4>
+<p><code>{r} odbus_weekday_17_20_ori &lt;- odbus_weekday_17_20 %&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(WEEKDAY_AFTERNOON_ORI = sum(TRIPS))%&gt;%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekday_17_20_des &lt;- odbus_weekday_17_20 %&gt;%   group_by(DESTINATION_PT_CODE) %&gt;%   summarise(WEEKDAY_AFTERNOON_DES = sum(TRIPS))%&gt;%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekday_17_20_data &lt;- full_join(odbus_weekday_17_20_ori , odbus_weekday_17_20_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%&gt;%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekday_17_20_data$WEEKDAY_AFTERNOON_TRIPS &lt;- with(odbus_weekday_17_20_data,    ifelse(is.na(WEEKDAY_AFTERNOON_ORI), 0, WEEKDAY_AFTERNOON_ORI) +   ifelse(is.na(WEEKDAY_AFTERNOON_DES), 0, WEEKDAY_AFTERNOON_DES) )  total_trips_per_busstop_wdap &lt;- left_join(busstop3414, odbus_weekday_17_20_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_wdap &lt;- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdap) %&gt;%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_wdap &lt;- total_trips_per_busstop_honeycomb_wdap %&gt;%   group_by(grid_id) %&gt;%   summarise(total_trips = sum(WEEKDAY_AFTERNOON_TRIPS))}</code></p>
+</section>
+<section id="weekendsholiday-morning-peak" class="level4" data-number="0.2.2">
+<h4 data-number="0.2.2" class="anchored" data-anchor-id="weekendsholiday-morning-peak"><span class="header-section-number">0.2.2</span> Weekends/Holiday Morning Peak</h4>
+<p><code>{r} odbus_weekend_11_14_ori &lt;- odbus_weekend_11_14 %&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(WEEKEND_MORNING_ORI = sum(TRIPS))%&gt;%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekend_11_14_des &lt;- odbus_weekend_11_14 %&gt;%   group_by(DESTINATION_PT_CODE) %&gt;%   summarise(WEEKEND_MORNING_DES = sum(TRIPS))%&gt;%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekend_11_14_data &lt;- full_join(odbus_weekend_11_14_ori , odbus_weekend_11_14_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%&gt;%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekend_11_14_data$WEEKEND_MORNING_TRIPS &lt;- with(odbus_weekend_11_14_data,    ifelse(is.na(WEEKEND_MORNING_ORI), 0, WEEKEND_MORNING_ORI) +   ifelse(is.na(WEEKEND_MORNING_DES), 0, WEEKEND_MORNING_DES) )  total_trips_per_busstop_wemp &lt;- left_join(busstop3414, odbus_weekend_11_14_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_wemp &lt;- st_join(honeycomb_grid_sf,total_trips_per_busstop_wemp) %&gt;%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_wemp &lt;- total_trips_per_busstop_honeycomb_wemp %&gt;%   group_by(grid_id) %&gt;%   summarise(total_trips = sum(WEEKEND_MORNING_TRIPS))}</code></p>
+</section>
+<section id="weekendsholiday-evening-peak" class="level4" data-number="0.2.3">
+<h4 data-number="0.2.3" class="anchored" data-anchor-id="weekendsholiday-evening-peak"><span class="header-section-number">0.2.3</span> Weekends/Holiday Evening Peak</h4>
+<p><code>{r} odbus_weekend_16_19_ori &lt;- odbus_weekend_16_19 %&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(WEEKEND_EVENING_ORI = sum(TRIPS))%&gt;%    mutate(ORIGIN_PT_CODE = as.factor(ORIGIN_PT_CODE))  odbus_weekend_16_19_des &lt;- odbus_weekend_16_19 %&gt;%   group_by(DESTINATION_PT_CODE) %&gt;%   summarise(WEEKEND_EVENING_DES = sum(TRIPS))%&gt;%    mutate(DESTINATION_PT_CODE = as.factor(DESTINATION_PT_CODE))  odbus_weekend_16_19_data &lt;- full_join(odbus_weekend_16_19_ori , odbus_weekend_16_19_des,                                     by =c("ORIGIN_PT_CODE"="DESTINATION_PT_CODE"))%&gt;%   rename(BUS_STOP_ID = ORIGIN_PT_CODE)  odbus_weekend_16_19_data$WEEKEND_EVENING_TRIPS &lt;- with(odbus_weekend_16_19_data,    ifelse(is.na(WEEKEND_EVENING_ORI), 0, WEEKEND_EVENING_ORI) +   ifelse(is.na(WEEKEND_EVENING_DES), 0, WEEKEND_EVENING_DES) )  total_trips_per_busstop_weep &lt;- left_join(busstop3414, odbus_weekend_16_19_data, by = c("BUS_STOP_N" = "BUS_STOP_ID"))  total_trips_per_busstop_honeycomb_weep &lt;- st_join(honeycomb_grid_sf,total_trips_per_busstop_weep) %&gt;%   filter(!is.na(BUS_STOP_N))  total_trips_per_grid_weep &lt;- total_trips_per_busstop_honeycomb_weep %&gt;%   group_by(grid_id) %&gt;%   summarise(total_trips = sum(WEEKEND_EVENING_TRIPS))}</code></p>
+</section>
+</section>
+<section id="task-1-geovisualisation-and-analysis" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="task-1-geovisualisation-and-analysis"><span class="header-section-number">1</span> Task 1: Geovisualisation and Analysis</h2>
+<section id="weekday-afternoon-peak-1" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="weekday-afternoon-peak-1"><span class="header-section-number">1.1</span> Weekday Afternoon Peak</h3>
+<p><code>{r} tmap_mode("view")  map_honeycomb = tm_shape(total_trips_per_grid_wdmp) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
+</section>
+<section id="weekday-afternoon-peak-2" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="weekday-afternoon-peak-2"><span class="header-section-number">1.2</span> Weekday Afternoon Peak</h3>
+<p><code>{r} tmap_mode("view")  map_honeycomb = tm_shape(total_trips_per_grid_wdap) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
+</section>
+<section id="weekendsholiday-morning-peak-1" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="weekendsholiday-morning-peak-1"><span class="header-section-number">1.3</span> Weekends/Holiday Morning Peak</h3>
+<p><code>{r} map_honeycomb = tm_shape(total_trips_per_grid_wemp) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
+</section>
+<section id="weekendsholiday-evening-peak-1" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="weekendsholiday-evening-peak-1"><span class="header-section-number">1.4</span> Weekends/Holiday Evening Peak</h3>
+<p><code>{r} map_honeycomb = tm_shape(total_trips_per_grid_weep) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
+<p>From the above, we can see there are more number of trip in the morning..??????</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
