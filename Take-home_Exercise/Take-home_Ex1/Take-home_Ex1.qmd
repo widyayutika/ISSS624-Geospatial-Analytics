@@ -267,12 +267,17 @@ odbus_weekday_6_9_data <- odbus_weekday_6_9 %>%
 The code chunk below will be used to join the busstop3414 SpatialPolygonsDataframe and odbus_weekday_6_9_data by BUS_STOP_N for busstop3414 and BUS_STOP_ID for original_destination_bus). This is performed by using *left_join()* of **dplyr** package.
 
 ```{r}
-total_trips_per_busstop_wdmp <- left_join(busstop3414, odbus_weekday_6_9_data, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))
+total_trips_per_busstop_wdmp <- left_join(busstop3414, odbus_weekday_6_9_data, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE")) %>%
+  filter(!is.na(Total_Trips))
 ```
 
 #### Spatial Join with honeycomb grid
 
 The code chunk below will be used to join the total_trips_per_busstop and honeycomb grid spatially and remove the grid without any busstop (remove rows with NA value on the BUS_STOP_N).
+
+```{r}
+total_trips_per_busstop_honeycomb_wdmp_test <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdmp)
+```
 
 ```{r}
 total_trips_per_busstop_honeycomb_wdmp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdmp) %>%
@@ -350,6 +355,26 @@ total_trips_per_grid_weep <- total_trips_per_busstop_honeycomb_weep %>%
 ## Geovisualisation and Analysis
 
 ### Weekday Afternoon Peak
+
+```{r}
+ggplot(data = total_trips_per_grid_wdmp,
+       aes(x = total_trips)) +
+  geom_histogram()
+```
+
+```{r}
+ggplot(data = total_trips_per_grid_wdmp,
+       aes(x = grid_id,
+           y = total_trips)) +
+  geom_point()
+```
+
+```{r}
+ggplot(data=total_trips_per_grid_wdmp, aes(x = "", y = total_trips)) +
+  geom_boxplot() +
+  labs(title = "Boxplot", x = "Groups", y = "total_trips") +
+  theme_minimal()
+```
 
 ```{r}
 tmap_mode("view")
@@ -466,10 +491,19 @@ There are 10 hexagonal grid with 0 neighbours and the most connected grid has 6 
 ### Visualising contiguity weights
 
 ```{r}
+centroid <- st_centroid(total_trips_per_grid_wdmp$area_honeycomb_grid)
+centroid
+```
+
+```{r}
 longitude <- map_dbl(total_trips_per_grid_wdmp$area_honeycomb_grid, ~st_centroid(.x)[[1]])  
 latitude <- map_dbl(total_trips_per_grid_wdmp$area_honeycomb_grid, ~st_centroid(.x)[[2]])  
 coords <- cbind(longitude, latitude) 
-head(coords)
+tail(coords)
+```
+
+```{r}
+summary(coords)
 ```
 
 #### Plotting Queen and Rook Contiguity Based on Neighbours Map
@@ -490,6 +524,13 @@ plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
 k1 <- knn2nb(knearneigh(coords))
 k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
 summary(k1dists)
+```
+
+### **Computing fixed distance weight matrix**
+
+```{r}
+wm_d500 <- dnearneigh(coords, 0, 500, longlat = TRUE)
+wm_d500
 ```
 
 #### Adaptive Distance Weight Matrix
