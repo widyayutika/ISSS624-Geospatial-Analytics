@@ -69,7 +69,7 @@ Beside these two data sets, an additional attribute data file called pop.csv wil
 
 ## **Computing Distance Matrix**
 
-In spatial interaction, a distance matrix is a table that shows the distance between pairs of locations. For example, in the table below we can see an Euclidean distance of 3926.0025 between MESZ01 and RVSZ05, of 3939.1079 between MESZ01 and SRSZ01, and so on. By definition, an location\'s distance from itself, which is shown in the main diagonal of the table, is 0.
+In spatial interaction, a distance matrix is a table that shows the distance between pairs of locations. For example, in the table below we can see an Euclidean distance of 3926.0025 between MESZ01 and RVSZ05, of 3939.1079 between MESZ01 and SRSZ01, and so on. By definition, an location's distance from itself, which is shown in the main diagonal of the table, is 0.
 
 In this section, you will learn how to compute a distance matrix by using URA Master Plan 2019 Planning Subzone boundary in which you saved as an rds file called *mpsz*.
 
@@ -242,7 +242,7 @@ flow_data1 <- flow_data %>%
 pop <- read_csv("data/aspatial/pop.csv")
 ```
 
-###  **Geospatial data wrangling**
+### **Geospatial data wrangling**
 
 ```{r}
 pop <- pop %>%
