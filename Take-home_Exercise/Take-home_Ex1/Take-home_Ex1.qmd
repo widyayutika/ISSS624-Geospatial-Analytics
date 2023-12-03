@@ -199,7 +199,7 @@ I will then use glimpse() to ensure the process is done correctly.
 glimpse(odbus)
 ```
 
-## Creating honeycomb_grid
+## Creating honeycomb_grid[1](#References)
 
 Honeycomb grid are preferred to replace coarse and irregular Master Plan 2019 Sub-zone GIS data set of URA because hexagon reduce sampling bias due to its grid shape of low perimeter to are ratio and its ability to form evenly spaced grid. Honeycomb grids are well-suited for approximating circular areas, making them suitable for mapping Singapore edges with is irregular shape.
 
@@ -519,7 +519,7 @@ In contiguity-based method, neighbour share common boundary and there are 2 meth
 
 In hexagonal grid, finding neighbours are straighforward. Both ROOK and QUEEN yield the same results as shown below.
 
-![Hexagon Neighbors](data/figure/Hexagonal_Neighbors.png){alt="Hexagon Neighbors" width="194"}
+![Hexagon Neighbors](data/figure/Hexagonal_Neighbors.png){width="194"}
 
 In distance-based method, there are 2 method fixed weighting where the grid are considered neighbours if they are within specified distance from one another and adaptive weighting where each grid has same specified number of neighbours.
 
@@ -661,7 +661,7 @@ Selecting a spatial weight matrix is use is dependent on the geographical area o
 
 #### **Row-Standardised Weights Matrix**
 
-After selecting the weight matrix to use, I will now assign weights to each neighboring polygon. Each neighboring polygon will be assigned equal weight (style=\"W\") by assigning the fraction 1/(#of neighbors) to each neighbouring area. This is also known as a row-standardised matrix where each row in the matrix sums to 1.
+After selecting the weight matrix to use, I will now assign weights to each neighboring polygon. Each neighboring polygon will be assigned equal weight (style="W") by assigning the fraction 1/(#of neighbors) to each neighbouring area. This is also known as a row-standardised matrix where each row in the matrix sums to 1.
 
 ```{r}
 rswm_knn6 <- nb2listw(knn6,
@@ -676,7 +676,7 @@ Notes:
 
 The input of *nb2listw()* must be an object of class **nb**. The syntax of the function has two major arguments, namely style and zero.poly.
 
--   *style* can take values \"W\", \"B\", \"C\", \"U\", \"minmax\" and \"S\". B is the basic binary coding, W is row standardised (sums over all links to n), C is globally standardised (sums over all links to n), U is equal to C divided by the number of neighbours (sums over all links to unity), while S is the variance-stabilizing coding scheme proposed by Tiefelsdorf et al. 1999, p. 167-168 (sums over all links to n).
+-   *style* can take values "W", "B", "C", "U", "minmax" and "S". B is the basic binary coding, W is row standardised (sums over all links to n), C is globally standardised (sums over all links to n), U is equal to C divided by the number of neighbours (sums over all links to unity), while S is the variance-stabilizing coding scheme proposed by Tiefelsdorf et al. 1999, p. 167-168 (sums over all links to n).
 
 -   If *zero policy* is set to TRUE, weights vectors of zero length are inserted for regions without neighbour in the neighbours list. These will in turn generate lag values of zero, equivalent to the sum of products of the zero row t(rep(0, length=length(neighbours))) %\*% x, for arbitrary numerical vector x of length length(neighbours). The spatially lagged value of x for the zero-neighbour region will then be zero, which may (or may not) be a sensible choice.
 
@@ -721,15 +721,15 @@ rswm_knn6_weep <- nb2listw(knn6_weep,
 
 #### **Computing Global Spatial Autocorrelation Statistics**
 
-This in sub-section, I will use two methods: Moran\'s I and Geary\'s C to test the hypothesis the following hypothesis:
+This in sub-section, I will use two methods: Moran's I and Geary's C to test the hypothesis the following hypothesis:
 
 -   H0: Observed spatial patterns of values is equally likely as any other spatial pattern i.e. data is randomly disbursed, no spatial pattern
 
 -   H1: Data is more spatially clustered than expected by chance alone.
 
-**Moran\'s I**
+**Moran's I**
 
-I will perform Moran\'s I statistical testing by using [*`moran.test()`*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep pacakage**. Moran\'s I describe how features differ from the values in the study area as a whole. The Moran I statistic ranges from -1 to 1. If the Moran I is:
+I will perform Moran's I statistical testing by using [*`moran.test()`*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep pacakage**. Moran's I describe how features differ from the values in the study area as a whole. The Moran I statistic ranges from -1 to 1. If the Moran I is:
 
 -   positive (I\>0): Clustered, observations tend to be similar
 
@@ -737,7 +737,7 @@ I will perform Moran\'s I statistical testing by using [*`moran.test()`*](https:
 
 -   approximately zero: observations arranged randomly over space
 
-The below code chunk will perform the Moran\'s I test on the passenger trips generate by origin.
+The below code chunk will perform the Moran's I test on the passenger trips generate by origin.
 
 ```{r}
 moran.test(total_trips_per_grid_wdmp$total_trips,
@@ -769,13 +769,13 @@ moran.test(total_trips_per_grid_weep$total_trips,
 
 Since the p-value \< 0.05, I have sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone. Since Moran I statistics are larger than 0, the observation are clustered, observations tend to be similar.
 
-**Computing Monte Carlo Moran\'s I**
+**Computing Monte Carlo Moran's I**
 
-If there are doubts that the assumptions of Moran\'s I are true (normality and randomisation), a Monte Carlo simulation is used to perform a permutation test for Moran\'s I.
+If there are doubts that the assumptions of Moran's I are true (normality and randomisation), a Monte Carlo simulation is used to perform a permutation test for Moran's I.
 
-The permutation tests consists of randomly reassigning the attribute values to a cell under the assumption of no spatial pattern. This random assignment is conducted n times. Each time, I will compute the Moran\'s I to crerate an empirical distribution of Moran\'s I under H0.
+The permutation tests consists of randomly reassigning the attribute values to a cell under the assumption of no spatial pattern. This random assignment is conducted n times. Each time, I will compute the Moran's I to crerate an empirical distribution of Moran's I under H0.
 
-The code chunk below performs permutation test for Moran\'s I statistic by using [*`moran.mc()`*](https://r-spatial.github.io/spdep/reference/moran.mc.html) of **spdep** package with a total of 1000 simulation.
+The code chunk below performs permutation test for Moran's I statistic by using [*`moran.mc()`*](https://r-spatial.github.io/spdep/reference/moran.mc.html) of **spdep** package with a total of 1000 simulation.
 
 ```{r}
 set.seed(1234)
@@ -819,9 +819,9 @@ bperm_weep
 
 Since the p-value is \< 0.05, we have sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone.
 
-**Geary\'s C**
+**Geary's C**
 
-Geary\'s C considers the difference between respective observations meaning that it describe how features differ from their immediate neighbours. Geary\'s C range from -1 to an undefined number above 1. If the Geary\'s C is:
+Geary's C considers the difference between respective observations meaning that it describe how features differ from their immediate neighbours. Geary's C range from -1 to an undefined number above 1. If the Geary's C is:
 
 -   Large (c\>1): Dispersed, observations tend to be dissimilar
 
@@ -829,7 +829,7 @@ Geary\'s C considers the difference between respective observations meaning that
 
 -   c = 1: observations arranged randomly over space
 
-The code chunk below performs Geary\'s C test for spatial autocorrelation for passenger trips generate by origin using [*`geary.test()`*](https://r-spatial.github.io/spdep/reference/geary.test.html) of **spdep** pacakage.
+The code chunk below performs Geary's C test for spatial autocorrelation for passenger trips generate by origin using [*`geary.test()`*](https://r-spatial.github.io/spdep/reference/geary.test.html) of **spdep** pacakage.
 
 ```{r}
 geary.test(total_trips_per_grid_wdmp$total_trips, listw = rswm_knn6)
@@ -847,13 +847,13 @@ geary.test(total_trips_per_grid_wemp$total_trips, listw = rswm_knn6_wemp)
 geary.test(total_trips_per_grid_weep$total_trips, listw = rswm_knn6_weep)
 ```
 
-For Weekday Morning Peak Hour, Weekends/Holiday Morning Peak and Weekends/Holiday Evening Peak, the p-value \< 0.05, there is sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone. The Geary C statistics are less than 1 suggesting that clusters are present . This finding is consistent with the results of the Global Moran\'s I test in the previous section.
+For Weekday Morning Peak Hour, Weekends/Holiday Morning Peak and Weekends/Holiday Evening Peak, the p-value \< 0.05, there is sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone. The Geary C statistics are less than 1 suggesting that clusters are present . This finding is consistent with the results of the Global Moran's I test in the previous section.
 
 However, for Weekday Afternoon Peak Hour, the p-value \> 0.05, suggesting that there is no sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This mean that the data is randomly disbursed with no spatial pattern which is not consistent with results of the Global Moran's I test in the previous section.
 
-**Computing Monte Carlo Geary\'s C**
+**Computing Monte Carlo Geary's C**
 
-Similar to Moran\'s I, Monte Carlo simulation is used to perform a permutation test for Geary\'s C. The code chunk below performs permutation test for Geary\'s C statistic by using *`geary.mc()`* of **spdep** pacakagepackeage with a total of 1000 simulation.
+Similar to Moran's I, Monte Carlo simulation is used to perform a permutation test for Geary's C. The code chunk below performs permutation test for Geary's C statistic by using *`geary.mc()`* of **spdep** pacakagepackeage with a total of 1000 simulation.
 
 ```{r}
 set.seed(1234)
@@ -901,7 +901,9 @@ Local Indicators of Spatial Association or LISA are statistics that evaluate the
 
 In this section, I will apply appropriate Local Indicators for Spatial Association (LISA), especially local Moran'I to detect cluster and/or outlier from passenger trips generate by origin at hexagon level.
 
-**Computing local Moran\'s I**
+Positive Local Moran\'s I value indicates that a feature has neighboring features with similarly high or low attribute values which refer to a cluster. While Negative Local Moran\'s I value indicates that a feature has neighboring features with dissimilar values which refer to an outlier.
+
+**Computing local Moran's I**
 
 I will use [*`localmoran()`*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** package to compute local Moran's I by first computing *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
 
@@ -933,7 +935,7 @@ head(localMI_weep)
 
 *localmoran()* function returns a matrix of values whose columns are:
 
--   Ii: the local Moran\'s I statistics
+-   Ii: the local Moran's I statistics
 
 -   E.Ii: the expectation of local moran statistic under the randomisation hypothesis
 
@@ -952,9 +954,9 @@ printCoefmat(data.frame(
   check.names=FALSE)
 ```
 
-**Mapping Local Moran\'s I values and p-values**
+**Mapping Local Moran's I values and p-values**
 
-Next, I will append the local Moran\'s I dataframe onto `nigeria` SpatialPolygonDataFrame in preparation for the next part. This can be done using the code chunks below.
+Next, I will append the local Moran's I dataframe onto `nigeria` SpatialPolygonDataFrame in preparation for the next part. This can be done using the code chunks below.
 
 ```{r}
 total_trips_per_grid_wdmp.localMI <- cbind(total_trips_per_grid_wdmp,localMI) %>%
@@ -976,7 +978,7 @@ total_trips_per_grid_weep.localMI_weep <- cbind(total_trips_per_grid_weep,localM
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
 
-Let\'s visualise both the Local Moran\'s I values and its p-values using the choropleth mapping functions of **tmap** package.
+Let's visualise both the Local Moran's I values and its p-values using the choropleth mapping functions of **tmap** package.
 
 ```{r}
 localMI.map <- tm_shape(total_trips_per_grid_wdmp.localMI) +
@@ -1141,11 +1143,11 @@ localMI_sig_weep.map <- base_weep +
 tmap_arrange(localMI_sig_wdmp.map,localMI_sig_wdap.map, localMI_sig_wemp.map,localMI_sig_weep.map)
 ```
 
-A positive Local Moran\'s I value indicates that a feature is part of a cluster while a negative Local Moran\'s I value indicates that a feature is an outlier. From the plot above, it it notable that north of Singapore which is around Woodlands are has 1 cluster with green shade for weekdays. While for weekends/holiday, there are more yellow referring to outliers except for the south part of Singapore, there is a noticeable cluster with green shade.
+A positive Local Moran's I value indicates that a feature is part of a cluster while a negative Local Moran's I value indicates that a feature is an outlier. From the plot above, it it notable that north of Singapore which is around Woodlands are has 1 cluster with green shade for weekdays. While for weekends/holiday, there are more yellow referring to outliers except for the south part of Singapore, there is a noticeable cluster with green shade.
 
 ### Plotting LISA Cluster Map
 
-The local Moran\'s I value alone is not enough to show spatial clustering because it does not tell us whether the value of the variable being tested is high or low and whether the test result was significant. Therefore, I will assign each observation to a quadrant depending on the value of the variable on the y-axis (centred around the mean) and Moran\'s I on the x-axis. Quadrant 1 contains coldspots and quadrant contains hotspot as follows:
+The local Moran's I value alone is not enough to show spatial clustering because it does not tell us whether the value of the variable being tested is high or low and whether the test result was significant. Therefore, I will assign each observation to a quadrant depending on the value of the variable on the y-axis (centred around the mean) and Moran's I on the x-axis. Quadrant 1 contains coldspots and quadrant contains hotspot as follows:
 
 ![LISA_Quadrant](data/figure/Lisa_Quadrant.png)
 
@@ -1157,7 +1159,7 @@ The following steps are conducted to prepare for LISA cluster map:
 
 2.  Derive a variable, `DV` by using a by using the spatially lagged version of total_trips and center it around its means. When DV \> 0, the spatially lagged variable of the region is higher than the mean.
 
-3.  Derive a variable, `L_MI` using the Local Moran\'s I.
+3.  Derive a variable, `L_MI` using the Local Moran's I.
 
 4.  Set the significance level for the local Moran.
 
@@ -1327,7 +1329,7 @@ LISAmap_weep <- tm_shape(total_trips_per_grid_weep.localMI_weep) +
             frame = TRUE)
 ```
 
-Next, I will plot the local Moran\'s I map (statistically significant values only) and LISA map together. The shaded hexagonal grids will be the same for each pair of maps.
+Next, I will plot the local Moran's I map (statistically significant values only) and LISA map together. The shaded hexagonal grids will be the same for each pair of maps.
 
 ```{r}
 tmap_arrange(localMI_sig_wdmp.map, LISAmap_wdmp,
@@ -1341,20 +1343,36 @@ tmap_arrange(localMI_sig_wemp.map, LISAmap_wemp,
   ncol =2)
 ```
 
-The LISA maps provides extra information whether the hexagonal grids have relatively higher or lower passenger trips generate by origin. Overall, Local Moran\'s have revealed significant spatial cluster and outliers.
+The LISA maps provides extra information whether the hexagonal grids have relatively higher or lower passenger trips generate by origin. Overall, Local Moran's have revealed significant spatial cluster and outliers.
 
-Weekday Morning Peak Hour:
+From the results above, it is noticed that there are only 3 type of quadrants which are insignificant, low-high and high-high. For ease of interpreting the result, below are the maps of Singapore regions.
 
-Weekday Afternoon Peak Hour:
+![](data/figure/Singapore%20Regions.png)
 
-Weekends/Holiday Morning Peak Hour:
+**Weekday Morning Peak Hour:**
 
-Weekends/Holiday Evening Peak Hour:
+From the Local Moran's I map, there are some hexagonal grids with positive Local Moran's I values and they have neigbours with another high or low passenger trip grids. This consistent with the LISA maps. The high-high clusters spread across Singapore while the low-high outliers are typically near the high-high clusters. The hexagonal grid near the Singapore Malaysia border (Johor and edges near the border) are high-high cluster indicating a high level of cross country activities during the weekday morning.
 
-#### **Interpretation of Results**
+**Weekday Afternoon Peak Hour:**
 
-## 
+The cluster with high-high characteristics are distributed throughout Singapore with exception of West Singapore where only low-high outliers are apparent. This is attributed to the presence of Boon Lay Bus Interchange as the sole busy interchange in the western region, leading to comparatively lower passenger trips in the other parts of West Singapore.
+
+**Weekends/Holiday Morning Peak Hour:**
+
+The cluster with high-high characteristics are distributed throughout Singapore especially in the CBD/Central area where a significant concentration of passenger trips are observed during these times. This elevated activities may be influenced by various factors such as recreational activities, family/friend gathering, etc., contributing to the high level of engagement and movement in the CBD area.
+
+**Weekends/Holiday Evening Peak Hour:**
+
+The distribution of high-high cluster and low-high outliers are quite similar with Weekends/Holiday Morning Peak Hour except that the high-high cluster are wider around the CBD area during evening and there is no high-high cluster around the Yishun area as compared to weekends/holiday morning peak hour.
 
 ## Conclusion
 
+In this take-home exercise, ESDA was used to generate insights about the distribution of passenger trips in Singapore. Using the Global Spatial Autocorrelation Statistics, it is noted that there is existence of spatial autocorrelation for all peak hour groups as whole analysis using Moran's I statistical test. However, when employing Geary's C, which accounts for differences with immediate neighbors, the data on weekday afternoon peak hour passenger trips is determined to be randomly dispersed, showing no discernible spatial pattern.
+
+The existence of spatial autocorrelation led me to use local spatial autocorrelation statistics like LISA cluster maps to identify areas of clusters and outliers. Understanding the uneven distribution of passenger trips for different peak hours will be crucial for optimizing public transportation infrastrcuture, managing congestion and enhancing overall urban mobility.
+
+In conclusion, the insights gained from both global and local spatial autocorrelation analyses contribute to a comprehensive understanding of passenger trip patterns for targeted interventions and strategic planning which in turn help to improve the efficiency and sustainability of transportation systems in Singapore. To enhance the depth of transportation dynamics analysis, future work could explore destination-specific or individual bus route considerations.
+
 ## References
+
+\[1\] <https://urbandatapalette.com/post/2021-08-tessellation-sf/>
