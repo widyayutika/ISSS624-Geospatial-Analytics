@@ -50,6 +50,8 @@ Before I get started, I need to ensure that **sf**, **spdep**, **tmap**, **tidyv
 The code chunk below is used to ensure that the necessary R packages have been installed , if its iyet to be installed, it will then be installed and ready to be used in the R environment.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
 ```
 
@@ -60,36 +62,48 @@ pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
 The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import BusStop shapefile into R. The imported shapefile will be **simple features** Object of **sf**.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 busstop <- st_read(dsn = "data/geospatial", layer = "BusStop")
 ```
 
 The code chunk below uses [*`st_geometry()`*](https://www.rdocumentation.org/packages/sf/versions/1.0-14/topics/st_geometry) of **sf** package to display basic information of feature class.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 st_geometry(busstop)
 ```
 
 The code chunk below uses [*`glimpse()`*](https://www.rdocumentation.org/packages/dplyr/versions/1.0.10/topics/glimpse) of **dplyr** package to display the data type of each fields.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 glimpse(busstop)
 ```
 
 Next, I will plot the geospatial data using the code chunk below.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 plot(busstop)
 ```
 
 From the glimpse() check above, it is shown that the BUS_STOP_N is in character type. It needs to be converted to factor type to work with categorical variables so that I can use them to georeference with bus stop location data.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 busstop$BUS_STOP_N <- as.factor(busstop$BUS_STOP_N)
 ```
 
 Next, I will confirm the data type for BUS_STOP_N has changed to data type of "factor" using glimpse().
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 glimpse(busstop)
 ```
 
@@ -98,18 +112,24 @@ glimpse(busstop)
 Next, I will import *origin_destination_bus_202310.csv* into R by using [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **readr** package. The output is R dataframe class.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
 ```
 
 The code chunk below uses [*`glimpse()`*](https://www.rdocumentation.org/packages/dplyr/versions/1.0.10/topics/glimpse) of **dplyr** package to display the odbus tibble data tables.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 glimpse(odbus)
 ```
 
 From the glimpse() check above, it is shown that the ORIGIN_PT_CODE and DESTINATION_PT_CODE are in character type. Both of them need to be converted to factor type to work with categorical variables so that I can use them to georeference with bus stop location data.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus$ORIGIN_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
 odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE) 
 ```
@@ -117,6 +137,8 @@ odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE)
 I will also change the data type of TIME_PER_HOUR and TOTAL_TRIPS from \<dbl\> to \<int\> because it both of these fields should be represented as whole numbers.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus$TIME_PER_HOUR <- as.integer(odbus$TIME_PER_HOUR)
 odbus$TOTAL_TRIPS <- as.integer(odbus$TOTAL_TRIPS) 
 ```
@@ -124,6 +146,8 @@ odbus$TOTAL_TRIPS <- as.integer(odbus$TOTAL_TRIPS)
 Next, I will confirm the data type for ORIGIN_PT_CODE and DESTINATION_PT_CODE have changed to factor using glimpse().
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 glimpse(odbus)
 ```
 
@@ -136,6 +160,8 @@ Common issue in importing geospatial data into R is that the coordinate system o
 The code chunk below uses [*`st_crs()`*](https://www.rdocumentation.org/packages/sf/versions/0.2-8/topics/st_crs) of **sf** package to retrieve the coordinate reference system of busstop.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 st_crs(busstop)
 ```
 
@@ -148,12 +174,16 @@ Next, I will transform busstop from geographic coordinate system to projected co
 The code chunk below uses [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 busstop3414 <- st_transform(busstop, 3414)
 ```
 
 Next, I will check the coordinate system after transformation with the code chunk below.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 st_crs(busstop3414)
 ```
 
@@ -164,6 +194,8 @@ As noticed from the above, the Projected CRS is now SVY21 / Singapore TM and the
 The code chunk below is used to check for duplicated records on odbus.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 duplicate <- odbus %>%
   group_by_all() %>%
   filter(n()>1) %>%
@@ -177,6 +209,8 @@ The above code chunk shows that there is no duplicate record found.
 First, I check the YEAR_MONTH and PT_TYPE unique values by using the *`table()`* to create a frequency table of each categorical representation.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 YEAR_MONTH_counts <- table(odbus$YEAR_MONTH)
 print(YEAR_MONTH_counts)
 
@@ -190,12 +224,16 @@ print(PT_TYPE_counts)
 From the results above, I will exclude YEAR_MONTH and PT_TYPE as they only have single categorical representation using the code chunk below.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus <- odbus[, !(names(odbus) %in% c("YEAR_MONTH", "PT_TYPE"))]
 ```
 
 I will then use glimpse() to ensure the process is done correctly.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 glimpse(odbus)
 ```
 
@@ -206,6 +244,8 @@ Honeycomb grid are preferred to replace coarse and irregular Master Plan 2019 Su
 The code chunk below uses [*`st_make_grid`*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of **sf** package to create a hexagonal or honeycomb grid with a 250m (perpendicular distance between the center of hexagon and its edges). According the the R documentation, the cellsize is the distance between opposite edges, which is 2 times the perpendicular distance between the center of hexagon and its edges. Thus, for the purpose of this exercise, I will use the cellsize of 500m and indicate the square=FALSE for hexagonal grid. After doing do, I will create a grid_id for each hexagonal grid.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 area_honeycomb_grid = st_make_grid(busstop3414, c(500, 500), what = "polygons", square = FALSE)    
 # To sf and add grid ID  
 honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%    
@@ -229,6 +269,8 @@ In this exercise, I will extract the commuting flows during peak hours as follow
 The code chunk below will be used to extract the weekday morning peak (Weekday: 6-9am) and calculate the passenger trips in each origin bus stop by using the *`group_by()`* from **dplyr** package and aggregate the values using *`summarise()`* and sum up the "Total_Trips". The *`mutate()`* in the code below is to ensure that after the group_by, the ORIGIN_PT_CODE remains in the factor data type.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus_weekday_6_9 <- odbus %>%
   filter(DAY_TYPE == "WEEKDAY") %>%
   filter(TIME_PER_HOUR >= 6 &
@@ -245,6 +287,8 @@ I will repeat the processes above for the other peak hours as shown below.
 The code chunk below will be used to extract the weekday afternoon peak (Weekday: 5-8pm) and calculate the passenger trips in each origin bus stop.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus_weekday_17_20 <- odbus %>%   
   filter(DAY_TYPE == "WEEKDAY") %>%   
   filter(TIME_PER_HOUR >= 17 &            
@@ -259,6 +303,8 @@ odbus_weekday_17_20 <- odbus %>%
 The code chunk below will be used to extract the weekend/holiday morning peak (Weekend/holiday: 11am-2pm) and calculate the passenger trips in each origin bus stop.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus_weekend_11_14 <- odbus %>% 
   filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%   
   filter(TIME_PER_HOUR >= 11 &            
@@ -273,6 +319,8 @@ odbus_weekend_11_14 <- odbus %>%
 The code chunk below will be used to extract the weekend/holiday evening peak (Weekend/holiday: 4-7pm) and calculate the total trips in each origin and destination pair.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 odbus_weekend_16_19 <- odbus %>%   
   filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%   
   filter(TIME_PER_HOUR >= 16 &            
@@ -291,6 +339,8 @@ This section provides a comprehensive step-by step walkthrough to calculate the 
 The code chunk below will be used to join the busstop3414 SpatialPolygonsDataframe and odbus_weekday_6_9_data by BUS_STOP_N for busstop3414 and BUS_STOP_ID for original_destination_bus. This is performed by using `left_join()` of **dplyr** package. In this take-home exercise, I will focus on passenger trips generated by origin bus stop, I will remove the rows with bus stops solely serve as destinations which are indicated by NA values on the corresponding "Total_Trips" using the *`filter()`* from **dplyr** package.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_busstop_wdmp <- left_join(busstop3414, odbus_weekday_6_9, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE")) %>%
   filter(!is.na(TRIPS))
 ```
@@ -300,6 +350,8 @@ total_trips_per_busstop_wdmp <- left_join(busstop3414, odbus_weekday_6_9, by = c
 The code chunk below will be used to join the total_trips_per_busstop and honeycomb grid spatially using *`st_join()`* from **sf** package and remove the hexagon grid without any bus stop which is indicated by NA value on the "BUS_STOP_N". Next, I will calculate the total trips in a hexagonal grid using the *`group_by()`* from **dplyr** package.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wdmp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_wdmp) %>%
   filter(!is.na(BUS_STOP_N))%>%
   group_by(grid_id) %>%
@@ -311,6 +363,8 @@ total_trips_per_grid_wdmp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_w
 #### Weekday Afternoon Peak
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_busstop_wdap <- left_join(busstop3414, odbus_weekday_17_20, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))%>%
   filter(!is.na(TRIPS))
 
@@ -323,6 +377,8 @@ total_trips_per_grid_wdap <- st_join(honeycomb_grid_sf,total_trips_per_busstop_w
 #### Weekends/Holiday Morning Peak
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 
 total_trips_per_busstop_wemp <- left_join(busstop3414, odbus_weekend_11_14, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))%>%
   filter(!is.na(TRIPS))
@@ -336,6 +392,8 @@ total_trips_per_grid_wemp <- st_join(honeycomb_grid_sf,total_trips_per_busstop_w
 #### Weekends/Holiday Evening Peak
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_busstop_weep <- left_join(busstop3414, odbus_weekend_16_19, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))%>%
   filter(!is.na(TRIPS))
 
@@ -350,6 +408,8 @@ total_trips_per_grid_weep <- st_join(honeycomb_grid_sf,total_trips_per_busstop_w
 After the data preparation, I will first plot the distribution of passenger trips using *`ggplot()`* of **tidyverse** package. To consolidate these distributions into a single plot, it is necessary to introduce grouping variable to each dataframe. Within this unified plot, key summary statistics including Q1, median, Q3, and mean highligthed by a red circle will be presented. This approach aims to provide a comprehensive comparison of passenger trip characteristics across various peak hour groups.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 # Add a grouping variable to each dataframe
 total_trips_per_grid_wdmp$Peak_Hour_Group <- "wdmp"
 total_trips_per_grid_wdap$Peak_Hour_Group <- "wdap"
@@ -392,6 +452,8 @@ Some hexagonal grid has a total of more than 400,000 passenger trips highlightin
 ### Weekday Morning Peak
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_mode("view")
 
 tm_shape(total_trips_per_grid_wdmp) +
@@ -421,6 +483,8 @@ Areas that are exhibiting a high concentration during weekday morning peak are a
 ### Weekday Afternoon Peak
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_mode("plot")
 
 tm_shape(total_trips_per_grid_wdap) +
@@ -448,6 +512,8 @@ Typically the passengers volume during weekday afternoon are higher than weekday
 ### Weekends/Holiday Morning Peak
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_mode("plot")
 tm_shape(total_trips_per_grid_wemp) +
   tm_fill(
@@ -474,6 +540,8 @@ During weekend and holidays, the morning peak hour (11am to 2pm) is later as com
 ### Weekends/Holiday Evening Peak
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_mode("plot")
 tm_shape(total_trips_per_grid_weep) +
   tm_fill(
@@ -530,6 +598,8 @@ If the hexagonal grid are isolated from each other, contiguity-based method may 
 In the code chunk below, I will use [*`poly2nb()`*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to compute contiguity weight matrices for weekday morning peak hour. This function builds a list of neighbours based on grids with contiguous boundaries. By default, Queen contiguity is applied.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 wm_q <- poly2nb(total_trips_per_grid_wdmp, queen=TRUE)
 summary(wm_q)
 ```
@@ -541,6 +611,8 @@ The summary report above shows that there are 1492 hexagonal grids. There are 1
 In the code chunk below, I will use [*`poly2nb()`*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to compute contiguity weight matrices for weekday morning peak hour by specifying `queen = FALSE` to compute Rook contiguity.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 wm_r <- poly2nb(total_trips_per_grid_wdmp, queen=FALSE)
 summary(wm_r)
 ```
@@ -554,12 +626,16 @@ Note: The results for both rook and queen method are the same as shown from the 
 Before visualising the weights, I need to reproject coordingate to WGS84 for longitude-latitude projection using *`st_transform`* of **sf** package.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wdmp$area_honeycomb_grid <- st_transform(total_trips_per_grid_wdmp$area_honeycomb_grid, "+proj=longlat +datum=WGS84")
 ```
 
 Next, I will get the coordinates of the hexagonal grid centroid in longitude and latitude using the *`st_coordinates`* and *`st_centroid`* of **sf** package.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 coords <- st_coordinates(st_centroid(total_trips_per_grid_wdmp$area_honeycomb_grid))
 head(coords)
 ```
@@ -567,6 +643,8 @@ head(coords)
 I will only plot queen contiguity as rook contiguity yields the same results.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey", main="Queen and Rook Contiguity")
 plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
 ```
@@ -586,6 +664,8 @@ plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
 -   Remove the list structure of the returned object by using [`unlist()`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/unlist).
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 k1 <- knn2nb(knearneigh(coords))
 k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
 summary(k1dists)
@@ -594,6 +674,8 @@ summary(k1dists)
 The summary report shows that the largest first nearest neighbour distance is 4,582.5 metres, so using a number slightly larger than this (i.e. 4.6) as the upper threshold gives certainty that all regions will have at least one neighbour.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wdmp$grid_id[match(max(k1dists), k1dists)]
 ```
 
@@ -604,6 +686,8 @@ Using the code chunk above, we discover that the grid_id with the maximum distan
 Now, we will compute the distance weight matrix by using [*dnearneigh()*](https://r-spatial.github.io/spdep/reference/dnearneigh.html) as shown below.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 wm_d4.6 <- dnearneigh(coords, 0, 4.6, longlat = TRUE)
 wm_d4.6
 ```
@@ -613,10 +697,14 @@ From the output, we see that the average number of links is 158.4651. The number
 Next, we will use *str()* to display the content of `wm_d4.6` weight matrix.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 str(wm_d4.6)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 par(mfrow = c(1,2))
 plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border = "lightgrey",main="1st nearest neighbours" )
 plot(k1, coords, add = TRUE, col = "red", length = 0.88, )
@@ -638,6 +726,8 @@ To overcome the issue of fixed distance weight matrix where there is uneven dist
 I will set k = 6 i.e., all hexagonal grids will have 6 neighbours for hexagonal grids.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 knn6 <- knn2nb(knearneigh(coords, k=6))
 knn6
 ```
@@ -645,6 +735,8 @@ knn6
 #### Plotting distance based neighbours
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 par(mfrow = c(1,2))
 plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border = "lightgrey",main="6 nearest neighbours" )
 plot(knn6, coords, add = TRUE, col = "red", length = 0.88, )
@@ -664,6 +756,8 @@ Selecting a spatial weight matrix is use is dependent on the geographical area o
 After selecting the weight matrix to use, I will now assign weights to each neighboring polygon. Each neighboring polygon will be assigned equal weight (style="W") by assigning the fraction 1/(#of neighbors) to each neighbouring area. This is also known as a row-standardised matrix where each row in the matrix sums to 1.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 rswm_knn6 <- nb2listw(knn6,
                    style = "W",
                    zero.policy = TRUE)
@@ -683,6 +777,8 @@ The input of *nb2listw()* must be an object of class **nb**. The syntax of the f
 The above processes are previously implemented on Weekday Morning Peak Hour. Next, I will implemented the same process as above for Weekday Afternoon Peak Hour, Weekends/Holiday Morning Peak Hour and Weekends/Holiday Evening Peak Hour
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wdap$area_honeycomb_grid <- st_transform(total_trips_per_grid_wdap$area_honeycomb_grid, "+proj=longlat +datum=WGS84") 
 
 coords_wdap <- st_coordinates(st_centroid(total_trips_per_grid_wdap$area_honeycomb_grid)) 
@@ -693,6 +789,8 @@ rswm_knn6_wdap <- nb2listw(knn6_wdap,
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wdap$area_honeycomb_grid <- st_transform(total_trips_per_grid_wdap$area_honeycomb_grid, "+proj=longlat +datum=WGS84")
 coords_wdap <- st_coordinates(st_centroid(total_trips_per_grid_wdap$area_honeycomb_grid)) 
 knn6_wdap <- knn2nb(knearneigh(coords_wdap, k=6)) 
@@ -702,6 +800,8 @@ rswm_knn6_wdap <- nb2listw(knn6_wdap,
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wemp$area_honeycomb_grid <- st_transform(total_trips_per_grid_wemp$area_honeycomb_grid, "+proj=longlat +datum=WGS84")
 coords_wemp <- st_coordinates(st_centroid(total_trips_per_grid_wemp$area_honeycomb_grid)) 
 knn6_wemp <- knn2nb(knearneigh(coords_wemp, k=6)) 
@@ -711,6 +811,8 @@ rswm_knn6_wemp <- nb2listw(knn6_wemp,
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_weep$area_honeycomb_grid <- st_transform(total_trips_per_grid_weep$area_honeycomb_grid, "+proj=longlat +datum=WGS84") 
 coords_weep <- st_coordinates(st_centroid(total_trips_per_grid_weep$area_honeycomb_grid)) 
 knn6_weep <- knn2nb(knearneigh(coords_weep, k=6)) 
@@ -740,6 +842,8 @@ I will perform Moran's I statistical testing by using [*`moran.test()`*](https:/
 The below code chunk will perform the Moran's I test on the passenger trips generate by origin.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 moran.test(total_trips_per_grid_wdmp$total_trips,
            listw = rswm_knn6,
            zero.policy = TRUE,
@@ -747,6 +851,8 @@ moran.test(total_trips_per_grid_wdmp$total_trips,
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 moran.test(total_trips_per_grid_wdap$total_trips,
            listw = rswm_knn6_wdap,
            zero.policy = TRUE,
@@ -754,6 +860,8 @@ moran.test(total_trips_per_grid_wdap$total_trips,
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 moran.test(total_trips_per_grid_wemp$total_trips,
            listw = rswm_knn6_wemp,
            zero.policy = TRUE,
@@ -761,6 +869,8 @@ moran.test(total_trips_per_grid_wemp$total_trips,
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 moran.test(total_trips_per_grid_weep$total_trips,
            listw = rswm_knn6_weep,
            zero.policy = TRUE,
@@ -778,6 +888,8 @@ The permutation tests consists of randomly reassigning the attribute values to a
 The code chunk below performs permutation test for Moran's I statistic by using [*`moran.mc()`*](https://r-spatial.github.io/spdep/reference/moran.mc.html) of **spdep** package with a total of 1000 simulation.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 set.seed(1234)
 bperm= moran.mc(total_trips_per_grid_wdmp$total_trips, 
                 listw=rswm_knn6, 
@@ -788,6 +900,8 @@ bperm
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 set.seed(1234)
 bperm_wdap= moran.mc(total_trips_per_grid_wdap$total_trips, 
                 listw=rswm_knn6_wdap, 
@@ -798,6 +912,8 @@ bperm_wdap
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 set.seed(1234)
 bperm_wemp= moran.mc(total_trips_per_grid_wemp$total_trips, 
                 listw=rswm_knn6_wemp, 
@@ -808,6 +924,8 @@ bperm_wemp
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 set.seed(1234)
 bperm_weep= moran.mc(total_trips_per_grid_weep$total_trips, 
                 listw=rswm_knn6_weep, 
@@ -832,18 +950,26 @@ Geary's C considers the difference between respective observations meaning that 
 The code chunk below performs Geary's C test for spatial autocorrelation for passenger trips generate by origin using [*`geary.test()`*](https://r-spatial.github.io/spdep/reference/geary.test.html) of **spdep** pacakage.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 geary.test(total_trips_per_grid_wdmp$total_trips, listw = rswm_knn6)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 geary.test(total_trips_per_grid_wdap$total_trips, listw = rswm_knn6_wdap)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 geary.test(total_trips_per_grid_wemp$total_trips, listw = rswm_knn6_wemp)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 geary.test(total_trips_per_grid_weep$total_trips, listw = rswm_knn6_weep)
 ```
 
@@ -856,6 +982,8 @@ However, for Weekday Afternoon Peak Hour, the p-value \> 0.05, suggesting that t
 Similar to Moran's I, Monte Carlo simulation is used to perform a permutation test for Geary's C. The code chunk below performs permutation test for Geary's C statistic by using *`geary.mc()`* of **spdep** pacakagepackeage with a total of 1000 simulation.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 set.seed(1234)
 bperm_func = geary.mc(total_trips_per_grid_wdmp$total_trips,
                  listw = rswm_knn6,
@@ -864,6 +992,8 @@ bperm_func
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 set.seed(1234)
 bperm_func_wdap = geary.mc(total_trips_per_grid_wdap$total_trips,
                  listw = rswm_knn6_wdap,
@@ -872,6 +1002,8 @@ bperm_func_wdap
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 bperm_func_wemp = geary.mc(total_trips_per_grid_wemp$total_trips,
                  listw = rswm_knn6_wemp,
                  nsim = 999)
@@ -879,6 +1011,8 @@ bperm_func_wemp
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 bperm_func_weep = geary.mc(total_trips_per_grid_weep$total_trips,
                  listw = rswm_knn6_weep,
                  nsim = 999)
@@ -910,24 +1044,32 @@ I will use [*`localmoran()`*](https://r-spatial.github.io/spdep/reference/local
 The code chunks below are used to compute local Moran's I of Total Trips at the hexagonal grid level.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 fips <- order(total_trips_per_grid_wdmp$grid_id)
 localMI <- localmoran(total_trips_per_grid_wdmp$total_trips, rswm_knn6)
 head(localMI)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 fips_wdap <- order(total_trips_per_grid_wdap$grid_id)
 localMI_wdap <- localmoran(total_trips_per_grid_wdap$total_trips, rswm_knn6_wdap)
 head(localMI_wdap)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 fips_wemp <- order(total_trips_per_grid_wemp$grid_id)
 localMI_wemp <- localmoran(total_trips_per_grid_wemp$total_trips, rswm_knn6_wemp)
 head(localMI_wemp)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 fips_weep <- order(total_trips_per_grid_weep$grid_id)
 localMI_weep <- localmoran(total_trips_per_grid_weep$total_trips, rswm_knn6_weep)
 head(localMI_weep)
@@ -945,13 +1087,15 @@ head(localMI_weep)
 
 -   Pr(): the p-value of local moran statistic
 
-The code chunk below list the content of the local Moran matrix derived by using [*printCoefmat()*](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/printCoefmat).
+The code chunk below list the content of the local Moran matrix derived by using [*printCoefmat()*](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/printCoefmat). Since the matrix is very long, I only show the head().
 
 ```{r}
-printCoefmat(data.frame(
+#| code-fold: true
+#| code-summary: "Show the code"
+printCoefmat(head(data.frame(
   localMI[fips,], 
   row.names=total_trips_per_grid_wdmp$grid_id[fips]),
-  check.names=FALSE)
+  check.names=FALSE))
 ```
 
 **Mapping Local Moran's I values and p-values**
@@ -959,21 +1103,29 @@ printCoefmat(data.frame(
 Next, I will append the local Moran's I dataframe onto `nigeria` SpatialPolygonDataFrame in preparation for the next part. This can be done using the code chunks below.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wdmp.localMI <- cbind(total_trips_per_grid_wdmp,localMI) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wdap.localMI_wdap <- cbind(total_trips_per_grid_wdap,localMI_wdap) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_wemp.localMI_wemp <- cbind(total_trips_per_grid_wemp,localMI_wemp) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 total_trips_per_grid_weep.localMI_weep <- cbind(total_trips_per_grid_weep,localMI_weep) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
@@ -981,6 +1133,8 @@ total_trips_per_grid_weep.localMI_weep <- cbind(total_trips_per_grid_weep,localM
 Let's visualise both the Local Moran's I values and its p-values using the choropleth mapping functions of **tmap** package.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 localMI.map <- tm_shape(total_trips_per_grid_wdmp.localMI) +
   tm_fill(col = "Ii", 
           style = "pretty", 
@@ -998,6 +1152,8 @@ tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 localMI_wdap.map <- tm_shape(total_trips_per_grid_wdap.localMI_wdap) +
   tm_fill(col = "Ii", 
           style = "pretty", 
@@ -1015,6 +1171,8 @@ tmap_arrange(localMI_wdap.map, pvalue_wdap.map, asp=1, ncol=2)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 localMI_wemp.map <- tm_shape(total_trips_per_grid_wemp.localMI_wemp) +
   tm_fill(col = "Ii", 
           style = "pretty", 
@@ -1032,6 +1190,8 @@ tmap_arrange(localMI_wemp.map, pvalue_wemp.map, asp=1, ncol=2)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 localMI_weep.map <- tm_shape(total_trips_per_grid_weep.localMI_weep) +
   tm_fill(col = "Ii", 
           style = "pretty", 
@@ -1051,6 +1211,8 @@ tmap_arrange(localMI_weep.map, pvalue_weep.map, asp=1, ncol=2)
 I will further build a choropleth and shade only grids that are statistically significant using the chunk code below. Firstly, I create ane object that consist statistically significant values using filter(). Then, I plot the base map consisting of the polygons features and lastly I overlay the base map with the statically significant Moran I' value map. The processes are repeated for the other peah hour group.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 #Wdmp
 total_trips_per_grid_wdmp.localMI_sig_wdmp <- cbind(total_trips_per_grid_wdmp,
                                                  localMI) %>%
@@ -1168,6 +1330,8 @@ The following steps are conducted to prepare for LISA cluster map:
 6.  Place statistically insignificant Moran I in the category 0.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 #Step 1
 quadrant <- vector(mode = 'numeric', length = nrow(localMI))
 #Step 2
@@ -1189,6 +1353,8 @@ quadrant[localMI[,5]>signif] <- 0
 The code chunk below is to plot the LISA cluster map for Weekday Morning Peak Hour.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 #Assign each region  to its respective quadrant
 total_trips_per_grid_wdmp.localMI$quadrant <- quadrant
 #Set the colours--one for each quadrant
@@ -1213,6 +1379,8 @@ LISAmap_wdmp <- tm_shape(total_trips_per_grid_wdmp.localMI) +
 The above processes are implemented for the other peak hours group.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 #Step 1
 quadrant_wdap <- vector(mode = 'numeric', length = nrow(localMI_wdap))
 #Step 2
@@ -1252,6 +1420,8 @@ LISAmap_wdap <- tm_shape(total_trips_per_grid_wdap.localMI_wdap) +
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 #Step 1
 quadrant_wemp <- vector(mode = 'numeric', length = nrow(localMI_wemp))
 #Step 2
@@ -1291,6 +1461,8 @@ LISAmap_wemp <- tm_shape(total_trips_per_grid_wemp.localMI_wemp) +
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 #Step 1
 quadrant_weep <- vector(mode = 'numeric', length = nrow(localMI_weep))
 #Step 2
@@ -1332,12 +1504,16 @@ LISAmap_weep <- tm_shape(total_trips_per_grid_weep.localMI_weep) +
 Next, I will plot the local Moran's I map (statistically significant values only) and LISA map together. The shaded hexagonal grids will be the same for each pair of maps.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_arrange(localMI_sig_wdmp.map, LISAmap_wdmp,
   localMI_sig_wdap.map, LISAmap_wdap,
   ncol =2)
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 tmap_arrange(localMI_sig_wemp.map, LISAmap_wemp,
   localMI_sig_weep.map, LISAmap_weep,
   ncol =2)
