@@ -421,7 +421,7 @@ Areas that are exhibiting a high concentration during weekday morning peak are a
 ### Weekday Afternoon Peak
 
 ```{r}
-tmap_mode("view")
+tmap_mode("plot")
 
 tm_shape(total_trips_per_grid_wdap) +
   tm_fill(
@@ -448,7 +448,7 @@ Typically the passengers volume during weekday afternoon are higher than weekday
 ### Weekends/Holiday Morning Peak
 
 ```{r}
-tmap_mode("view")
+tmap_mode("plot")
 tm_shape(total_trips_per_grid_wemp) +
   tm_fill(
     col = "total_trips",
@@ -474,7 +474,7 @@ During weekend and holidays, the morning peak hour (11am to 2pm) is later as com
 ### Weekends/Holiday Evening Peak
 
 ```{r}
-tmap_mode("view")
+tmap_mode("plot")
 tm_shape(total_trips_per_grid_weep) +
   tm_fill(
     col = "total_trips",
@@ -490,7 +490,7 @@ tm_shape(total_trips_per_grid_weep) +
       total_trips = list(format = "f", digits = 0))
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
-
+tmap_mode("plot")
 ```
 
 Similar with the other peak hours, the passenger trips are mostly contributed by major bus interchange as the origin.
@@ -501,9 +501,7 @@ During weekend and holidays, the evening peak hour (4 to 7pm) is slightly earlie
 
 ## **Exploratory Spatial Data Analysis**
 
-Exploratory Spatial Data Analysis or ESDA consists of descriptive techniques to discover spatial distribution of data and identify outliers.
-
-In this section, I will cover global spatial autocorrelation which focuses on overall tredn and local spatial autocorrelation which focuses on identifying hot and cold spots in the data.
+Exploratory Spatial Data Analysis or ESDA consists of descriptive techniques to discover spatial distribution of data and identify outliers. In this ESDA section, I will cover global spatial autocorrelation which focuses on overall trend and local spatial autocorrelation which focuses on hot and cold spots in the data.
 
 ### **Global Spatial Autocorrelation**
 
@@ -522,12 +520,6 @@ In contiguity-based method, neighbour share common boundary and there are 2 meth
 In hexagonal grid, finding neighbours are straighforward. Both ROOK and QUEEN yield the same results as shown below.
 
 ![Hexagon Neighbors](data/figure/Hexagonal_Neighbors.png){alt="Hexagon Neighbors" width="194"}
-
-```         
-![Hexagon Neighbors](data/figure/Hexagonal_Neighbors.png)
-![Hook Neighbors](data/figure/Rook.png)
-![Queen Neighbors](data/figure/Queen.png)
-```
 
 In distance-based method, there are 2 method fixed weighting where the grid are considered neighbours if they are within specified distance from one another and adaptive weighting where each grid has same specified number of neighbours.
 
@@ -688,6 +680,45 @@ The input of *nb2listw()* must be an object of class **nb**. The syntax of the f
 
 -   If *zero policy* is set to TRUE, weights vectors of zero length are inserted for regions without neighbour in the neighbours list. These will in turn generate lag values of zero, equivalent to the sum of products of the zero row t(rep(0, length=length(neighbours))) %\*% x, for arbitrary numerical vector x of length length(neighbours). The spatially lagged value of x for the zero-neighbour region will then be zero, which may (or may not) be a sensible choice.
 
+The above processes are previously implemented on Weekday Morning Peak Hour. Next, I will implemented the same process as above for Weekday Afternoon Peak Hour, Weekends/Holiday Morning Peak Hour and Weekends/Holiday Evening Peak Hour
+
+```{r}
+total_trips_per_grid_wdap$area_honeycomb_grid <- st_transform(total_trips_per_grid_wdap$area_honeycomb_grid, "+proj=longlat +datum=WGS84") 
+
+coords_wdap <- st_coordinates(st_centroid(total_trips_per_grid_wdap$area_honeycomb_grid)) 
+knn6_wdap <- knn2nb(knearneigh(coords_wdap, k=6)) 
+rswm_knn6_wdap <- nb2listw(knn6_wdap,
+                   style = "W",
+                   zero.policy = TRUE)
+```
+
+```{r}
+total_trips_per_grid_wdap$area_honeycomb_grid <- st_transform(total_trips_per_grid_wdap$area_honeycomb_grid, "+proj=longlat +datum=WGS84")
+coords_wdap <- st_coordinates(st_centroid(total_trips_per_grid_wdap$area_honeycomb_grid)) 
+knn6_wdap <- knn2nb(knearneigh(coords_wdap, k=6)) 
+rswm_knn6_wdap <- nb2listw(knn6_wdap,
+                   style = "W",
+                   zero.policy = TRUE)
+```
+
+```{r}
+total_trips_per_grid_wemp$area_honeycomb_grid <- st_transform(total_trips_per_grid_wemp$area_honeycomb_grid, "+proj=longlat +datum=WGS84")
+coords_wemp <- st_coordinates(st_centroid(total_trips_per_grid_wemp$area_honeycomb_grid)) 
+knn6_wemp <- knn2nb(knearneigh(coords_wemp, k=6)) 
+rswm_knn6_wemp <- nb2listw(knn6_wemp,
+                   style = "W",
+                   zero.policy = TRUE)
+```
+
+```{r}
+total_trips_per_grid_weep$area_honeycomb_grid <- st_transform(total_trips_per_grid_weep$area_honeycomb_grid, "+proj=longlat +datum=WGS84") 
+coords_weep <- st_coordinates(st_centroid(total_trips_per_grid_weep$area_honeycomb_grid)) 
+knn6_weep <- knn2nb(knearneigh(coords_weep, k=6)) 
+rswm_knn6_weep <- nb2listw(knn6_weep,
+                   style = "W",
+                   zero.policy = TRUE)
+```
+
 #### **Computing Global Spatial Autocorrelation Statistics**
 
 This in sub-section, I will use two methods: Moran\'s I and Geary\'s C to test the hypothesis the following hypothesis:
@@ -698,7 +729,7 @@ This in sub-section, I will use two methods: Moran\'s I and Geary\'s C to test t
 
 **Moran\'s I**
 
-I will perform Moran\'s I statistical testing by using [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep**. Moran\'s I describe how features differ from the values in the study area as a whole. The Moran I statistic ranges from -1 to 1. If the Moran I is:
+I will perform Moran\'s I statistical testing by using [*`moran.test()`*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep pacakage**. Moran\'s I describe how features differ from the values in the study area as a whole. The Moran I statistic ranges from -1 to 1. If the Moran I is:
 
 -   positive (I\>0): Clustered, observations tend to be similar
 
@@ -715,15 +746,36 @@ moran.test(total_trips_per_grid_wdmp$total_trips,
            na.action = na.omit)
 ```
 
+```{r}
+moran.test(total_trips_per_grid_wdap$total_trips,
+           listw = rswm_knn6_wdap,
+           zero.policy = TRUE,
+           na.action = na.omit)
+```
+
+```{r}
+moran.test(total_trips_per_grid_wemp$total_trips,
+           listw = rswm_knn6_wemp,
+           zero.policy = TRUE,
+           na.action = na.omit)
+```
+
+```{r}
+moran.test(total_trips_per_grid_weep$total_trips,
+           listw = rswm_knn6_weep,
+           zero.policy = TRUE,
+           na.action = na.omit)
+```
+
 Since the p-value \< 0.05, I have sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone. Since Moran I statistics are larger than 0, the observation are clustered, observations tend to be similar.
 
 **Computing Monte Carlo Moran\'s I**
 
-If there are doubts that the assumptions of Moran\'s I are true (normality and randomisation), I will use a Monte Carlo simulation to perform a permutation test for Moran\'s I.
+If there are doubts that the assumptions of Moran\'s I are true (normality and randomisation), a Monte Carlo simulation is used to perform a permutation test for Moran\'s I.
 
-The permutation tests consists of randomly reassigning the attribute values to a cell under the assumption of no spatial pattern. This random assignment is conducted n times. Each time, I will compute the Moran\'s I to creating an empirical distribution of Moran\'s I under H0.
+The permutation tests consists of randomly reassigning the attribute values to a cell under the assumption of no spatial pattern. This random assignment is conducted n times. Each time, I will compute the Moran\'s I to crerate an empirical distribution of Moran\'s I under H0.
 
-The code chunk below performs permutation test for Moran\'s I statistic by using [*moran.mc()*](https://r-spatial.github.io/spdep/reference/moran.mc.html) of **spdep**. A total of 1000 simulation will be performed.
+The code chunk below performs permutation test for Moran\'s I statistic by using [*`moran.mc()`*](https://r-spatial.github.io/spdep/reference/moran.mc.html) of **spdep** package with a total of 1000 simulation.
 
 ```{r}
 set.seed(1234)
@@ -735,29 +787,574 @@ bperm= moran.mc(total_trips_per_grid_wdmp$total_trips,
 bperm
 ```
 
-Since the p-value is \< 0.05, we have sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone.
-
-**Visualising Monte Carlo Moran\'s I**
-
-The code chunk below will be used to plot the distribution of the simulated Moran\'s I test statistics as a histogram using *`ggplot2`* from **tidyverse** package**.**
-
-```{}
+```{r}
+set.seed(1234)
+bperm_wdap= moran.mc(total_trips_per_grid_wdap$total_trips, 
+                listw=rswm_knn6_wdap, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm_wdap
 ```
 
-## Task 2: **Local Indicators of Spatial Association (LISA) Analysis**
+```{r}
+set.seed(1234)
+bperm_wemp= moran.mc(total_trips_per_grid_wemp$total_trips, 
+                listw=rswm_knn6_wemp, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm_wemp
+```
 
-### **Deriving Continuity Spatial Weights: Queen's Method**
+```{r}
+set.seed(1234)
+bperm_weep= moran.mc(total_trips_per_grid_weep$total_trips, 
+                listw=rswm_knn6_weep, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm_weep
+```
 
-wm_q \<- hunan_GDPPC %\>% mutate(nb = st_contiguity(geometry), wt = st_weights(nb, style = "W"), .before=1)
+Since the p-value is \< 0.05, we have sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone.
+
+**Geary\'s C**
+
+Geary\'s C considers the difference between respective observations meaning that it describe how features differ from their immediate neighbours. Geary\'s C range from -1 to an undefined number above 1. If the Geary\'s C is:
+
+-   Large (c\>1): Dispersed, observations tend to be dissimilar
+
+-   Small (c\<1): Clustered, observations tend to be similar
+
+-   c = 1: observations arranged randomly over space
+
+The code chunk below performs Geary\'s C test for spatial autocorrelation for passenger trips generate by origin using [*`geary.test()`*](https://r-spatial.github.io/spdep/reference/geary.test.html) of **spdep** pacakage.
+
+```{r}
+geary.test(total_trips_per_grid_wdmp$total_trips, listw = rswm_knn6)
+```
+
+```{r}
+geary.test(total_trips_per_grid_wdap$total_trips, listw = rswm_knn6_wdap)
+```
+
+```{r}
+geary.test(total_trips_per_grid_wemp$total_trips, listw = rswm_knn6_wemp)
+```
+
+```{r}
+geary.test(total_trips_per_grid_weep$total_trips, listw = rswm_knn6_weep)
+```
+
+For Weekday Morning Peak Hour, Weekends/Holiday Morning Peak and Weekends/Holiday Evening Peak, the p-value \< 0.05, there is sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone. The Geary C statistics are less than 1 suggesting that clusters are present . This finding is consistent with the results of the Global Moran\'s I test in the previous section.
+
+However, for Weekday Afternoon Peak Hour, the p-value \> 0.05, suggesting that there is no sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This mean that the data is randomly disbursed with no spatial pattern which is not consistent with results of the Global Moran's I test in the previous section.
+
+**Computing Monte Carlo Geary\'s C**
+
+Similar to Moran\'s I, Monte Carlo simulation is used to perform a permutation test for Geary\'s C. The code chunk below performs permutation test for Geary\'s C statistic by using *`geary.mc()`* of **spdep** pacakagepackeage with a total of 1000 simulation.
+
+```{r}
+set.seed(1234)
+bperm_func = geary.mc(total_trips_per_grid_wdmp$total_trips,
+                 listw = rswm_knn6,
+                 nsim = 999)
+bperm_func
+```
+
+```{r}
+set.seed(1234)
+bperm_func_wdap = geary.mc(total_trips_per_grid_wdap$total_trips,
+                 listw = rswm_knn6_wdap,
+                 nsim = 999)
+bperm_func_wdap
+```
+
+```{r}
+bperm_func_wemp = geary.mc(total_trips_per_grid_wemp$total_trips,
+                 listw = rswm_knn6_wemp,
+                 nsim = 999)
+bperm_func_wemp
+```
+
+```{r}
+bperm_func_weep = geary.mc(total_trips_per_grid_weep$total_trips,
+                 listw = rswm_knn6_weep,
+                 nsim = 999)
+bperm_func_weep
+```
+
+For Weekday Morning Peak Hour, Weekends/Holiday Morning Peak and Weekends/Holiday Evening Peak, the p-value is less than 0.05, suggesting that there is sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone.
+
+However, for Weekday Afternoon Peak Hour, the p-value \> 0.05, suggesting that there is no sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence, suggesting that the data is randomly disbursed with no spatial pattern.
+
+## **Local Spatial Autocorrelation Statistics**
+
+From the results above, I have established the statistical testing that spatial clustering occurs for Weekday Morning Peak Hour, Weekends/Holiday Morning Peak and Weekends/Holiday Evening but not for Weekday Afternoon Peak Hour in Singapore.
+
+In this section, I will detect clusters/outliers and discover hot or cold spots using Local Spatial Autocorrelation Statistics with Local Indicators of Spatial Association (LISA).
+
+### **Local Indicators of Spatial Association (LISA) Analysis**
 
 Local Indicators of Spatial Association or LISA are statistics that evaluate the existence of clusters in the spatial arrangement of a given variable.
 
-In this section, you will learn how to apply appropriate Local Indicators for Spatial Association (LISA), especially local Moran'I to detect cluster and/or outlier from passenger trips generate by origin at hexagon level.
+In this section, I will apply appropriate Local Indicators for Spatial Association (LISA), especially local Moran'I to detect cluster and/or outlier from passenger trips generate by origin at hexagon level.
+
+**Computing local Moran\'s I**
+
+I will use [*`localmoran()`*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** package to compute local Moran's I by first computing *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
 
 The code chunks below are used to compute local Moran's I of Total Trips at the hexagonal grid level.
 
-fips \<- order(total_trips_per_grid_wdmp\$grid_id) localMI \<- localmoran(hunan\$GDPPC, rswm_q) head(localMI)
+```{r}
+fips <- order(total_trips_per_grid_wdmp$grid_id)
+localMI <- localmoran(total_trips_per_grid_wdmp$total_trips, rswm_knn6)
+head(localMI)
+```
 
-Reproducible:
+```{r}
+fips_wdap <- order(total_trips_per_grid_wdap$grid_id)
+localMI_wdap <- localmoran(total_trips_per_grid_wdap$total_trips, rswm_knn6_wdap)
+head(localMI_wdap)
+```
 
-just change the read_csv and the file
+```{r}
+fips_wemp <- order(total_trips_per_grid_wemp$grid_id)
+localMI_wemp <- localmoran(total_trips_per_grid_wemp$total_trips, rswm_knn6_wemp)
+head(localMI_wemp)
+```
+
+```{r}
+fips_weep <- order(total_trips_per_grid_weep$grid_id)
+localMI_weep <- localmoran(total_trips_per_grid_weep$total_trips, rswm_knn6_weep)
+head(localMI_weep)
+```
+
+*localmoran()* function returns a matrix of values whose columns are:
+
+-   Ii: the local Moran\'s I statistics
+
+-   E.Ii: the expectation of local moran statistic under the randomisation hypothesis
+
+-   Var.Ii: the variance of local moran statistic under the randomisation hypothesis
+
+-   Z.Ii:the standard deviate of local moran statistic
+
+-   Pr(): the p-value of local moran statistic
+
+The code chunk below list the content of the local Moran matrix derived by using [*printCoefmat()*](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/printCoefmat).
+
+```{r}
+printCoefmat(data.frame(
+  localMI[fips,], 
+  row.names=total_trips_per_grid_wdmp$grid_id[fips]),
+  check.names=FALSE)
+```
+
+**Mapping Local Moran\'s I values and p-values**
+
+Next, I will append the local Moran\'s I dataframe onto `nigeria` SpatialPolygonDataFrame in preparation for the next part. This can be done using the code chunks below.
+
+```{r}
+total_trips_per_grid_wdmp.localMI <- cbind(total_trips_per_grid_wdmp,localMI) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+```{r}
+total_trips_per_grid_wdap.localMI_wdap <- cbind(total_trips_per_grid_wdap,localMI_wdap) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+```{r}
+total_trips_per_grid_wemp.localMI_wemp <- cbind(total_trips_per_grid_wemp,localMI_wemp) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+```{r}
+total_trips_per_grid_weep.localMI_weep <- cbind(total_trips_per_grid_weep,localMI_weep) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+Let\'s visualise both the Local Moran\'s I values and its p-values using the choropleth mapping functions of **tmap** package.
+
+```{r}
+localMI.map <- tm_shape(total_trips_per_grid_wdmp.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty", 
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+
+pvalue.map <- tm_shape(total_trips_per_grid_wdmp.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Blues", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
+```
+
+```{r}
+localMI_wdap.map <- tm_shape(total_trips_per_grid_wdap.localMI_wdap) +
+  tm_fill(col = "Ii", 
+          style = "pretty", 
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+
+pvalue_wdap.map <- tm_shape(total_trips_per_grid_wdap.localMI_wdap) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Blues", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(localMI_wdap.map, pvalue_wdap.map, asp=1, ncol=2)
+```
+
+```{r}
+localMI_wemp.map <- tm_shape(total_trips_per_grid_wemp.localMI_wemp) +
+  tm_fill(col = "Ii", 
+          style = "pretty", 
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+
+pvalue_wemp.map <- tm_shape(total_trips_per_grid_wemp.localMI_wemp) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Blues", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(localMI_wemp.map, pvalue_wemp.map, asp=1, ncol=2)
+```
+
+```{r}
+localMI_weep.map <- tm_shape(total_trips_per_grid_weep.localMI_weep) +
+  tm_fill(col = "Ii", 
+          style = "pretty", 
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+
+pvalue_weep.map <- tm_shape(total_trips_per_grid_weep.localMI_weep) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Blues", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(localMI_weep.map, pvalue_weep.map, asp=1, ncol=2)
+```
+
+I will further build a choropleth and shade only grids that are statistically significant using the chunk code below. Firstly, I create ane object that consist statistically significant values using filter(). Then, I plot the base map consisting of the polygons features and lastly I overlay the base map with the statically significant Moran I' value map. The processes are repeated for the other peah hour group.
+
+```{r}
+#Wdmp
+total_trips_per_grid_wdmp.localMI_sig_wdmp <- cbind(total_trips_per_grid_wdmp,
+                                                 localMI) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..) %>%
+  filter(Pr.Ii < 0.05)
+
+base_wdmp <- tm_shape(total_trips_per_grid_wdmp) + 
+  tm_fill(col = 'gray98') + 
+  tm_borders(alpha = 0.3)
+
+localMI_sig_wdmp.map <- base_wdmp + 
+  tm_shape(total_trips_per_grid_wdmp.localMI_sig_wdmp) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          title = "Local Moran I Statistics") +
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "Local Moran's I (Sig.) Map \n(Weekday Morning Peak) ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+
+#wdap
+total_trips_per_grid_wdap.localMI_sig_wdap <- cbind(total_trips_per_grid_wdap,localMI_wdap) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..) %>%
+  filter(Pr.Ii < 0.05)
+
+base_wdap <- tm_shape(total_trips_per_grid_wdap) + 
+  tm_fill(col = 'gray98') + 
+  tm_borders(alpha = 0.3)
+
+localMI_sig_wdap.map <- base_wdap + 
+  tm_shape(total_trips_per_grid_wdap.localMI_sig_wdap) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          title = "Local Moran I Statistics") +
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "Local Moran's I (Sig.) Map \n(Weekday Afternoon Peak) ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+
+#wemp
+total_trips_per_grid_wemp.localMI_sig_wemp <- cbind(total_trips_per_grid_wemp,localMI_wemp) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..) %>%
+  filter(Pr.Ii < 0.05)
+
+base_wemp <- tm_shape(total_trips_per_grid_wemp) + 
+  tm_fill(col = 'gray98') + 
+  tm_borders(alpha = 0.3)
+
+localMI_sig_wemp.map <- base_wemp + 
+  tm_shape(total_trips_per_grid_wemp.localMI_sig_wemp) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          title = "Local Moran I Statistics") +
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "Local Moran's I (Sig.) Map \n(Weekends/Holiday Morning Peak) ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+
+#weep
+total_trips_per_grid_weep.localMI_sig_weep <- cbind(total_trips_per_grid_weep,localMI_weep) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..) %>%
+  filter(Pr.Ii < 0.05)
+
+base_weep <- tm_shape(total_trips_per_grid_weep) + 
+  tm_fill(col = 'gray98') + 
+  tm_borders(alpha = 0.3)
+
+localMI_sig_weep.map <- base_weep + 
+  tm_shape(total_trips_per_grid_weep.localMI_sig_weep) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          title = "Local Moran I Statistics") +
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "Local Moran's I (Sig.) Map \n(Weekends/Holiday Afternoon Peak) ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+
+tmap_arrange(localMI_sig_wdmp.map,localMI_sig_wdap.map, localMI_sig_wemp.map,localMI_sig_weep.map)
+```
+
+A positive Local Moran\'s I value indicates that a feature is part of a cluster while a negative Local Moran\'s I value indicates that a feature is an outlier. From the plot above, it it notable that north of Singapore which is around Woodlands are has 1 cluster with green shade for weekdays. While for weekends/holiday, there are more yellow referring to outliers except for the south part of Singapore, there is a noticeable cluster with green shade.
+
+### Plotting LISA Cluster Map
+
+The local Moran\'s I value alone is not enough to show spatial clustering because it does not tell us whether the value of the variable being tested is high or low and whether the test result was significant. Therefore, I will assign each observation to a quadrant depending on the value of the variable on the y-axis (centred around the mean) and Moran\'s I on the x-axis. Quadrant 1 contains coldspots and quadrant contains hotspot as follows:
+
+![LISA_Quadrant](data/figure/Lisa_Quadrant.png)
+
+LISA Cluster Maps also categorises each region into one of five groups: (1) High-High, (2) High-Low, (3) Low-High, (4) Low-Low and (5) Insignificant.
+
+The following steps are conducted to prepare for LISA cluster map:
+
+1.  Create a vector of the same length as the number of hexagonal grid in each peak hour datasets.
+
+2.  Derive a variable, `DV` by using a by using the spatially lagged version of total_trips and center it around its means. When DV \> 0, the spatially lagged variable of the region is higher than the mean.
+
+3.  Derive a variable, `L_MI` using the Local Moran\'s I.
+
+4.  Set the significance level for the local Moran.
+
+5.  Define the command lines for: high-high, low-low, low-high, high-low
+
+6.  Place statistically insignificant Moran I in the category 0.
+
+```{r}
+#Step 1
+quadrant <- vector(mode = 'numeric', length = nrow(localMI))
+#Step 2
+total_trips_per_grid_wdmp$lag_total_trips <- lag.listw(rswm_knn6, total_trips_per_grid_wdmp$total_trips)
+DV <- total_trips_per_grid_wdmp$lag_total_trips - mean(total_trips_per_grid_wdmp$lag_total_trips)     
+#Step 3
+LM_I <- localMI[,1] 
+#Step 4
+signif <- 0.05
+#Step 5
+quadrant[DV <0 & LM_I>0] <- 1 #low-low
+quadrant[DV >0 & LM_I<0] <- 2 #high-low
+quadrant[DV <0 & LM_I<0] <- 3 #low-high
+quadrant[DV >0 & LM_I>0] <- 4 #high-high
+#Step 6
+quadrant[localMI[,5]>signif] <- 0 
+```
+
+The code chunk below is to plot the LISA cluster map for Weekday Morning Peak Hour.
+
+```{r}
+#Assign each region  to its respective quadrant
+total_trips_per_grid_wdmp.localMI$quadrant <- quadrant
+#Set the colours--one for each quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c") 
+
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+LISAmap_wdmp <- tm_shape(total_trips_per_grid_wdmp.localMI) + 
+  tm_fill(col = "quadrant",
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1],
+          labels = clusters[c(sort(unique(quadrant)))+1])  + 
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "LISA Cluster Map \n Weekday Morning Peak Hour ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+```
+
+The above processes are implemented for the other peak hours group.
+
+```{r}
+#Step 1
+quadrant_wdap <- vector(mode = 'numeric', length = nrow(localMI_wdap))
+#Step 2
+total_trips_per_grid_wdap$lag_total_trips <- lag.listw(rswm_knn6_wdap, total_trips_per_grid_wdap$total_trips)
+DV_wdap <- total_trips_per_grid_wdap$lag_total_trips - mean(total_trips_per_grid_wdap$lag_total_trips)     
+#Step 3
+LM_I_wdap <- localMI_wdap[,1] 
+#Step 4
+signif <- 0.05
+#Step 5
+quadrant_wdap[DV_wdap <0 & LM_I_wdap>0] <- 1 #low-low
+quadrant_wdap[DV_wdap >0 & LM_I_wdap<0] <- 2 #high-low
+quadrant_wdap[DV_wdap <0 & LM_I_wdap<0] <- 3 #low-high
+quadrant_wdap[DV_wdap >0 & LM_I_wdap>0] <- 4 #high-high
+#Step 6
+quadrant_wdap[localMI_wdap[,5]>signif] <- 0 
+
+#Assign each region  to its respective quadrant
+total_trips_per_grid_wdap.localMI_wdap$quadrant_wdap <- quadrant_wdap
+#Set the colours--one for each quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c") 
+
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+LISAmap_wdap <- tm_shape(total_trips_per_grid_wdap.localMI_wdap) + 
+  tm_fill(col = "quadrant_wdap",
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant_wdap)))+1],
+          labels = clusters[c(sort(unique(quadrant_wdap)))+1])  + 
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "LISA Cluster Map \n Weekday Afternoon Peak Hour ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+```
+
+```{r}
+#Step 1
+quadrant_wemp <- vector(mode = 'numeric', length = nrow(localMI_wemp))
+#Step 2
+total_trips_per_grid_wemp$lag_total_trips <- lag.listw(rswm_knn6_wemp, total_trips_per_grid_wemp$total_trips)
+DV_wemp <- total_trips_per_grid_wemp$lag_total_trips - mean(total_trips_per_grid_wemp$lag_total_trips)     
+#Step 3
+LM_I_wemp <- localMI_wemp[,1] 
+#Step 4
+signif <- 0.05
+#Step 5
+quadrant_wemp[DV_wemp <0 & LM_I_wemp>0] <- 1 #low-low
+quadrant_wemp[DV_wemp >0 & LM_I_wemp<0] <- 2 #high-low
+quadrant_wemp[DV_wemp <0 & LM_I_wemp<0] <- 3 #low-high
+quadrant_wemp[DV_wemp >0 & LM_I_wemp>0] <- 4 #high-high
+#Step 6
+quadrant_wemp[localMI_wemp[,5]>signif] <- 0 
+
+#Assign each region  to its respective quadrant
+total_trips_per_grid_wemp.localMI_wemp$quadrant_wemp <- quadrant_wemp
+#Set the colours--one for each quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c") 
+
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+LISAmap_wemp <- tm_shape(total_trips_per_grid_wemp.localMI_wemp) + 
+  tm_fill(col = "quadrant_wemp",
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant_wemp)))+1],
+          labels = clusters[c(sort(unique(quadrant_wemp)))+1])  + 
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "LISA Cluster Map \n Weekends/Holiday Morning Peak Hour ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+```
+
+```{r}
+#Step 1
+quadrant_weep <- vector(mode = 'numeric', length = nrow(localMI_weep))
+#Step 2
+total_trips_per_grid_weep$lag_total_trips <- lag.listw(rswm_knn6_weep, total_trips_per_grid_weep$total_trips)
+DV_weep <- total_trips_per_grid_weep$lag_total_trips - mean(total_trips_per_grid_weep$lag_total_trips)     
+#Step 3
+LM_I_weep <- localMI_weep[,1] 
+#Step 4
+signif <- 0.05
+#Step 5
+quadrant_weep[DV_weep <0 & LM_I_weep>0] <- 1 #low-low
+quadrant_weep[DV_weep >0 & LM_I_weep<0] <- 2 #high-low
+quadrant_weep[DV_weep <0 & LM_I_weep<0] <- 3 #low-high
+quadrant_weep[DV_weep >0 & LM_I_weep>0] <- 4 #high-high
+#Step 6
+quadrant_weep[localMI_weep[,5]>signif] <- 0 
+
+#Assign each region  to its respective quadrant
+total_trips_per_grid_weep.localMI_weep$quadrant_weep <- quadrant_weep
+#Set the colours--one for each quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c") 
+
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+LISAmap_weep <- tm_shape(total_trips_per_grid_weep.localMI_weep) + 
+  tm_fill(col = "quadrant_weep",
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant_weep)))+1],
+          labels = clusters[c(sort(unique(quadrant_weep)))+1])  + 
+  tm_borders(alpha = 0.3) + 
+  tm_layout(main.title = "LISA Cluster Map \n Weekends/Holiday Evening Peak Hour ",
+            main.title.size = 1,
+            main.title.position = "center",
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE)
+```
+
+Next, I will plot the local Moran\'s I map (statistically significant values only) and LISA map together. The shaded hexagonal grids will be the same for each pair of maps.
+
+```{r}
+tmap_arrange(localMI_sig_wdmp.map, LISAmap_wdmp,
+  localMI_sig_wdap.map, LISAmap_wdap,
+  ncol =2)
+```
+
+```{r}
+tmap_arrange(localMI_sig_wemp.map, LISAmap_wemp,
+  localMI_sig_weep.map, LISAmap_weep,
+  ncol =2)
+```
+
+The LISA maps provides extra information whether the hexagonal grids have relatively higher or lower passenger trips generate by origin. Overall, Local Moran\'s have revealed significant spatial cluster and outliers.
+
+Weekday Morning Peak Hour:
+
+Weekday Afternoon Peak Hour:
+
+Weekends/Holiday Morning Peak Hour:
+
+Weekends/Holiday Evening Peak Hour:
+
+#### **Interpretation of Results**
+
+## 
+
+## Conclusion
+
+## References
