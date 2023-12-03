@@ -31,7 +31,7 @@ The geospatial data used in this take-home exercise are as follows.
 
 -   *Bus Stop Location* from [LTA DataMall](https://datamall.lta.gov.sg/content/datamall/en.html), which provides information about all the bus stops currently being serviced by buses, including the bus stop code (identifier) and location coordinates.
 
--   *hexagon*, a [hexagon](https://desktop.arcgis.com/en/arcmap/latest/tools/spatial-statistics-toolbox/h-whyhexagons.htm) layer of 250m perpendicular distance between the centre of the hexagon and its edges is used toeplace the relative coarse and irregular Master Plan 2019 Planning Sub-zone GIS data set of URA.
+-   *hexagon*, a [hexagon](https://desktop.arcgis.com/en/arcmap/latest/tools/spatial-statistics-toolbox/h-whyhexagons.htm) layer of 250m perpendicular distance between the centre of the hexagon and its edges is used to replace the relative coarse and irregular Master Plan 2019 Planning Sub-zone GIS data set of URA.
 
 ## **Setting the Analytical Tools**
 
@@ -43,7 +43,7 @@ Before I get started, I need to ensure that **sf**, **spdep**, **tmap**, **tidyv
 
 -   *tmap* : for preparing cartographic quality chropleth map
 
--   *tidyverse* : for wrangling attribute data in R ; [tidyverse](https://www.tidyverse.org/) has already included collection of packages such as readr, ggplot2, dplyr, tiblle, etc.
+-   *tidyverse* : for wrangling attribute data in R ; [tidyverse](https://www.tidyverse.org/) has already included collection of packages such as readr, ggplot2, dplyr, tiblle, purr, etc.
 
 -   knitr: for facilitating dynamic report generation in R Markdown documents.
 
@@ -200,6 +200,8 @@ glimpse(odbus)
 ```
 
 ## Creating honeycomb_grid
+
+Honeycomb grid are preferred to replace coarse and irregular Master Plan 2019 Sub-zone GIS data set of URA because hexagon reduce sampling bias due to its grid shape of low perimeter to are ratio and its ability to form evenly spaced grid. Honeycomb grids are well-suited for approximating circular areas, making them suitable for mapping Singapore edges with is irregular shape.
 
 The code chunk below uses [*`st_make_grid`*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of **sf** package to create a hexagonal or honeycomb grid with a 250m (perpendicular distance between the center of hexagon and its edges). According the the R documentation, the cellsize is the distance between opposite edges, which is 2 times the perpendicular distance between the center of hexagon and its edges. Thus, for the purpose of this exercise, I will use the cellsize of 500m and indicate the square=FALSE for hexagonal grid. After doing do, I will create a grid_id for each hexagonal grid.
 
@@ -465,7 +467,9 @@ tm_shape(total_trips_per_grid_wemp) +
 tmap_mode("plot")
 ```
 
-The peak hour for weekends/holiday morning are slightly late as compared to weekday morning.
+Given that weekends consist of only two days, the passenger trip numbers exhibit lower in total numbers but comparable to those recorded during five weekdays, following a similar pattern. Notably, major bus interchanges, such as Woodlands, Boon Lay, Bedok and Tampines continue to play a pivotal role contributing significantly to the overall passenger trips during both weekdays and weekends.
+
+During weekend and holidays, the morning peak hour (11am to 2pm) is later as compared to weekday morning (6 to 9am). This temporal shift can be attributed to social dynamic where individuals engaging in lunchtime activity with family and friends during weekends. This distinctive pattern underscores the influence of social interactions on commuter behaviors during non-working days.
 
 ### Weekends/Holiday Evening Peak
 
@@ -489,59 +493,105 @@ tm_shape(total_trips_per_grid_weep) +
 
 ```
 
-## Distribution of passenger trips generate by origin at hexagon level
+Similar with the other peak hours, the passenger trips are mostly contributed by major bus interchange as the origin.
 
-### Defining the Neighbourhood
+Typically , the afternoon/evening peak hours witnesses a higher volume of passenger trips both on weekdays and weekend as compared to morning peak hours. This preference may be due to individuals opting for MRT during hours as it provide punctual mode of transportation as compared to bus which might be affected by congestion and could potentially lead to delays in reaching to work/schools/leisure activities.
+
+During weekend and holidays, the evening peak hour (4 to 7pm) is slightly earlier as compared to weekday morning afternoon (5 to 8pm). This shift in timing could be attributed to the altered schedules and leisurely activities that individuals typically engage in during weekends and holidays. People might be more inclined to initiate their evening commutes earlier to accommodate social plans, family gatherings, or recreational activities that are common during non-working days.
+
+## **Exploratory Spatial Data Analysis**
+
+Exploratory Spatial Data Analysis or ESDA consists of descriptive techniques to discover spatial distribution of data and identify outliers.
+
+In this section, I will cover global spatial autocorrelation which focuses on overall tredn and local spatial autocorrelation which focuses on identifying hot and cold spots in the data.
+
+### **Global Spatial Autocorrelation**
+
+In this section, I will include the computation of global spatial autocorrelation statistics and spatial complete randomness test for global spatial autocorrelation. The goal here is to understand whether the passenger trips generated by origin are evenly distributed across Singapore.
+
+#### **Spatial Weights Matrix**
+
+Before computing global spatial autocorrelation, we need to define spatial neighbourhood by using spatial weight. There are two common methods to compute spatial weight which are contiguity-based and distanced-based.
+
+In contiguity-based method, neighbour share common boundary and there are 2 methods in defining the boundary, ROOK by common edge while QUEEN by common edge and vertices as shown below for square shape.
+
+![Hook Neighbors](data/figure/Rook.png){width="205"}
+
+![Queen Neighbors](data/figure/Queen.png){width="206"}
+
+In hexagonal grid, finding neighbours are straighforward. Both ROOK and QUEEN yield the same results as shown below.
+
+![Hexagon Neighbors](data/figure/Hexagonal_Neighbors.png){alt="Hexagon Neighbors" width="194"}
+
+```         
+![Hexagon Neighbors](data/figure/Hexagonal_Neighbors.png)
+![Hook Neighbors](data/figure/Rook.png)
+![Queen Neighbors](data/figure/Queen.png)
+```
+
+In distance-based method, there are 2 method fixed weighting where the grid are considered neighbours if they are within specified distance from one another and adaptive weighting where each grid has same specified number of neighbours.
+
+If the hexagonal grid are isolated from each other, contiguity-based method may not be appropriate as it may yield many grids with no neighbours.
 
 #### Contiguity Weight Matrix (QUEEN)
+
+In the code chunk below, I will use [*`poly2nb()`*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to compute contiguity weight matrices for weekday morning peak hour. This function builds a list of neighbours based on grids with contiguous boundaries. By default, Queen contiguity is applied.
 
 ```{r}
 wm_q <- poly2nb(total_trips_per_grid_wdmp, queen=TRUE)
 summary(wm_q)
 ```
 
-There are 10 hexagonal grid with 0 neighbours and the most connected grid has 6 links.
+The summary report above shows that there are 1492 hexagonal grids. There are 12 hexagonal grid with no neighbour, 40 hexagonal grids with 1 neighbour and the most connected grids have 6 links. The average number of links is 4.5.
 
 #### Contiguity Weight Matrix (ROOK)
+
+In the code chunk below, I will use [*`poly2nb()`*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to compute contiguity weight matrices for weekday morning peak hour by specifying `queen = FALSE` to compute Rook contiguity.
 
 ```{r}
 wm_r <- poly2nb(total_trips_per_grid_wdmp, queen=FALSE)
 summary(wm_r)
 ```
 
-There are 10 hexagonal grid with 0 neighbours and the most connected grid has 6 links. So we should use distance-based neighbours.
+The summary report above shows that there are 1492 hexagonal grids. There are 12 hexagonal grid with no neighbour, 40 hexagonal grids with 1 neighbour and the most connected grids have 6 links. The average number of links is 4.5.
 
-### Visualising contiguity weights
+Note: The results for both rook and queen method are the same as shown from the computation above.
+
+#### Visualising contiguity weights
+
+Before visualising the weights, I need to reproject coordingate to WGS84 for longitude-latitude projection using *`st_transform`* of **sf** package.
 
 ```{r}
-centroid <- st_centroid(total_trips_per_grid_wdmp$area_honeycomb_grid)
-centroid
+total_trips_per_grid_wdmp$area_honeycomb_grid <- st_transform(total_trips_per_grid_wdmp$area_honeycomb_grid, "+proj=longlat +datum=WGS84")
 ```
 
+Next, I will get the coordinates of the hexagonal grid centroid in longitude and latitude using the *`st_coordinates`* and *`st_centroid`* of **sf** package.
+
 ```{r}
-longitude <- map_dbl(total_trips_per_grid_wdmp$area_honeycomb_grid, ~st_centroid(.x)[[1]])  
-latitude <- map_dbl(total_trips_per_grid_wdmp$area_honeycomb_grid, ~st_centroid(.x)[[2]])  
-coords <- cbind(longitude, latitude) 
-tail(coords)
+coords <- st_coordinates(st_centroid(total_trips_per_grid_wdmp$area_honeycomb_grid))
+head(coords)
 ```
 
-```{r}
-summary(coords)
-```
-
-#### Plotting Queen and Rook Contiguity Based on Neighbours Map
+I will only plot queen contiguity as rook contiguity yields the same results.
 
 ```{r}
-par(mfrow=c(1,2))
-plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey", main="Queen Contiguity")
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey", main="Queen and Rook Contiguity")
 plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
-plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey", main="Rook Contiguity")
-plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
 ```
 
-### **Computing distance based neighbours**
+#### Fixed Distance Weight Matrix
 
-### **Determine the cut-off distance**
+*The [dnearneigh()](https://r-spatial.github.io/spdep/reference/dnearneigh.html)* of **spdep** package will be used to derive the distance-based weight matrices by . This function identifies neighbours of hexagonal grid centroid points by Euclidean distance with a lower and upper bounds distance controlled by the *bounds* argument or by Great Circle distance in kilometres if *longlat* argument is set to TRUE.
+
+##### **Determine the cut-off distance**
+
+-   Return a matrix with the indices of points belonging to the set of the k nearest neighbours of each other by using [*`knearneigh()`*](https://r-spatial.github.io/spdep/reference/knearneigh.html) of **spdep.**
+
+-   Convert the knn object returned by *knearneigh()* into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using [*`knn2nb()`*](https://r-spatial.github.io/spdep/reference/knn2nb.html).
+
+-   Return the length of neighbour relationship edges by using [*`nbdists()`*](https://r-spatial.github.io/spdep/reference/nbdists.html) of **spdep**. The function returns in the units of the coordinates if the coordinates are projected, in km otherwise.
+
+-   Remove the list structure of the returned object by using [`unlist()`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/unlist).
 
 ```{r}
 k1 <- knn2nb(knearneigh(coords))
@@ -549,14 +599,51 @@ k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
 summary(k1dists)
 ```
 
-### **Computing fixed distance weight matrix**
+The summary report shows that the largest first nearest neighbour distance is 4,582.5 metres, so using a number slightly larger than this (i.e. 4.6) as the upper threshold gives certainty that all regions will have at least one neighbour.
 
 ```{r}
-wm_d500 <- dnearneigh(coords, 0, 500, longlat = TRUE)
-wm_d500
+total_trips_per_grid_wdmp$grid_id[match(max(k1dists), k1dists)]
 ```
 
+Using the code chunk above, we discover that the grid_id with the maximum distance to its nearest neighbour is 1767 which is the grid in Johor.
+
+##### **Computing fixed distance weight matrix**
+
+Now, we will compute the distance weight matrix by using [*dnearneigh()*](https://r-spatial.github.io/spdep/reference/dnearneigh.html) as shown below.
+
+```{r}
+wm_d4.6 <- dnearneigh(coords, 0, 4.6, longlat = TRUE)
+wm_d4.6
+```
+
+From the output, we see that the average number of links is 158.4651. The number is quite high and may skew the analysis.
+
+Next, we will use *str()* to display the content of `wm_d4.6` weight matrix.
+
+```{r}
+str(wm_d4.6)
+```
+
+```{r}
+par(mfrow = c(1,2))
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border = "lightgrey",main="1st nearest neighbours" )
+plot(k1, coords, add = TRUE, col = "red", length = 0.88, )
+
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border = "lightgrey", main = "Distance Link")
+plot(wm_d4.6, coords, add = TRUE, pch = 19, cex = 0.6)
+```
+
+Due to a high number of links, we have very dense graphs which make it difficult to interpret. However, we can still make some observations:
+
+-   The above charts actually illustrates a characteristic of fixed distance weight matrix whereby the hexagonal grid of busttop origin in the centre of Singapore tend to have more neighbours and the edges of Singapore with lesser neighbours like Johor, Tanah Merah Coast.
+
+-   Based on the above charts, we can tell that the geographical areas of the regions in Singapore are highly connected by the bus.
+
 #### Adaptive Distance Weight Matrix
+
+To overcome the issue of fixed distance weight matrix where there is uneven distribution of neighbours, we can use directly control the numbers of neighbours using k-nearest neighbours, as shown in the code chunk below.
+
+I will set k = 6 i.e., all hexagonal grids will have 6 neighbours for hexagonal grids.
 
 ```{r}
 knn6 <- knn2nb(knearneigh(coords, k=6))
@@ -566,11 +653,96 @@ knn6
 #### Plotting distance based neighbours
 
 ```{r}
-plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border="lightgrey")
-plot(knn6, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
+par(mfrow = c(1,2))
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border = "lightgrey",main="6 nearest neighbours" )
+plot(knn6, coords, add = TRUE, col = "red", length = 0.88, )
+
+plot(total_trips_per_grid_wdmp$area_honeycomb_grid, border = "lightgrey", main = "Distance Link w KNN")
+plot(knn6, coords, add = TRUE, pch = 19, cex = 0.6)
+
+
 ```
 
-#### Inversed Distance
+#### Determining Which Weights Matrix to Use
+
+Selecting a spatial weight matrix is use is dependent on the geographical area of interest and the focus of the study. Contiguity-based is preferred for hexagonal grid with uniform sizes because contiguity matrices are well-suited for regular grids where neighboring units share common boundaries. However, in my case, there are some hexagonal grid with no neighbour making contiguity-based not preferable. Therefore, I will use distance-based methods with adaptive distance spatial weight matrix because fixed distance has disadvantage where some regions only have 1 neighbour, while others may have 158 neighbours.
+
+#### **Row-Standardised Weights Matrix**
+
+After selecting the weight matrix to use, I will now assign weights to each neighboring polygon. Each neighboring polygon will be assigned equal weight (style=\"W\") by assigning the fraction 1/(#of neighbors) to each neighbouring area. This is also known as a row-standardised matrix where each row in the matrix sums to 1.
+
+```{r}
+rswm_knn6 <- nb2listw(knn6,
+                   style = "W",
+                   zero.policy = TRUE)
+rswm_knn6
+```
+
+I will be using the row-standardised weight matrix for the next part of the analysis.
+
+Notes:
+
+The input of *nb2listw()* must be an object of class **nb**. The syntax of the function has two major arguments, namely style and zero.poly.
+
+-   *style* can take values \"W\", \"B\", \"C\", \"U\", \"minmax\" and \"S\". B is the basic binary coding, W is row standardised (sums over all links to n), C is globally standardised (sums over all links to n), U is equal to C divided by the number of neighbours (sums over all links to unity), while S is the variance-stabilizing coding scheme proposed by Tiefelsdorf et al. 1999, p. 167-168 (sums over all links to n).
+
+-   If *zero policy* is set to TRUE, weights vectors of zero length are inserted for regions without neighbour in the neighbours list. These will in turn generate lag values of zero, equivalent to the sum of products of the zero row t(rep(0, length=length(neighbours))) %\*% x, for arbitrary numerical vector x of length length(neighbours). The spatially lagged value of x for the zero-neighbour region will then be zero, which may (or may not) be a sensible choice.
+
+#### **Computing Global Spatial Autocorrelation Statistics**
+
+This in sub-section, I will use two methods: Moran\'s I and Geary\'s C to test the hypothesis the following hypothesis:
+
+-   H0: Observed spatial patterns of values is equally likely as any other spatial pattern i.e. data is randomly disbursed, no spatial pattern
+
+-   H1: Data is more spatially clustered than expected by chance alone.
+
+**Moran\'s I**
+
+I will perform Moran\'s I statistical testing by using [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep**. Moran\'s I describe how features differ from the values in the study area as a whole. The Moran I statistic ranges from -1 to 1. If the Moran I is:
+
+-   positive (I\>0): Clustered, observations tend to be similar
+
+-   negative (I\<0): Disperse, observations tend to be dissimilar
+
+-   approximately zero: observations arranged randomly over space
+
+The below code chunk will perform the Moran\'s I test on the passenger trips generate by origin.
+
+```{r}
+moran.test(total_trips_per_grid_wdmp$total_trips,
+           listw = rswm_knn6,
+           zero.policy = TRUE,
+           na.action = na.omit)
+```
+
+Since the p-value \< 0.05, I have sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone. Since Moran I statistics are larger than 0, the observation are clustered, observations tend to be similar.
+
+**Computing Monte Carlo Moran\'s I**
+
+If there are doubts that the assumptions of Moran\'s I are true (normality and randomisation), I will use a Monte Carlo simulation to perform a permutation test for Moran\'s I.
+
+The permutation tests consists of randomly reassigning the attribute values to a cell under the assumption of no spatial pattern. This random assignment is conducted n times. Each time, I will compute the Moran\'s I to creating an empirical distribution of Moran\'s I under H0.
+
+The code chunk below performs permutation test for Moran\'s I statistic by using [*moran.mc()*](https://r-spatial.github.io/spdep/reference/moran.mc.html) of **spdep**. A total of 1000 simulation will be performed.
+
+```{r}
+set.seed(1234)
+bperm= moran.mc(total_trips_per_grid_wdmp$total_trips, 
+                listw=rswm_knn6, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+
+Since the p-value is \< 0.05, we have sufficient statistical evidence to reject the null hypothesis at the 95% level of confidence. This means that data is more spatially clustered than expected by chance alone.
+
+**Visualising Monte Carlo Moran\'s I**
+
+The code chunk below will be used to plot the distribution of the simulated Moran\'s I test statistics as a histogram using *`ggplot2`* from **tidyverse** package**.**
+
+```{}
+```
 
 ## Task 2: **Local Indicators of Spatial Association (LISA) Analysis**
 
