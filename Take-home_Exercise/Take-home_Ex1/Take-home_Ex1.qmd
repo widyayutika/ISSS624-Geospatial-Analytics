@@ -581,13 +581,13 @@ Before computing global spatial autocorrelation, we need to define spatial neigh
 
 In contiguity-based method, neighbour share common boundary and there are 2 methods in defining the boundary, ROOK by common edge while QUEEN by common edge and vertices as shown below for square shape.
 
-![Hook Neighbors](data/figure/Rook.png){width="205"}
+![Hook Neighbors](figure/Rook.png){width="241"}
 
-![Queen Neighbors](data/figure/Queen.png){width="206"}
+![Queen Neighbors](figure/Queen.png)
 
 In hexagonal grid, finding neighbours are straighforward. Both ROOK and QUEEN yield the same results as shown below.
 
-![Hexagon Neighbors](data/figure/Hexagonal_Neighbors.png){width="194"}
+![Hexagon Neighbors](figure/Hexagonal_Neighbors.png)
 
 In distance-based method, there are 2 method fixed weighting where the grid are considered neighbours if they are within specified distance from one another and adaptive weighting where each grid has same specified number of neighbours.
 
@@ -1311,7 +1311,7 @@ A positive Local Moran's I value indicates that a feature is part of a cluster w
 
 The local Moran's I value alone is not enough to show spatial clustering because it does not tell us whether the value of the variable being tested is high or low and whether the test result was significant. Therefore, I will assign each observation to a quadrant depending on the value of the variable on the y-axis (centred around the mean) and Moran's I on the x-axis. Quadrant 1 contains coldspots and quadrant contains hotspot as follows:
 
-![LISA_Quadrant](data/figure/Lisa_Quadrant.png)
+![LISA_Quadrant](figure/Lisa_Quadrant.png)
 
 LISA Cluster Maps also categorises each region into one of five groups: (1) High-High, (2) High-Low, (3) Low-High, (4) Low-Low and (5) Insignificant.
 
@@ -1523,7 +1523,7 @@ The LISA maps provides extra information whether the hexagonal grids have relati
 
 From the results above, it is noticed that there are only 3 type of quadrants which are insignificant, low-high and high-high. For ease of interpreting the result, below are the maps of Singapore regions.
 
-![](data/figure/Singapore%20Regions.png)
+![Singapore Regions](figure/Singapore%20Regions.png)
 
 **Weekday Morning Peak Hour:**
 
