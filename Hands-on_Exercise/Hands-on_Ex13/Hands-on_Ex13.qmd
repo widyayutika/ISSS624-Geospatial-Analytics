@@ -1,0 +1,12 @@
+---
+title: "Hands-on_Ex13:Calibrating Hedonic Pricing Model for Private Highrise Property with GWR Method"
+author: "Widya Tantiya Yutika"
+date: "02 December 2023"
+date-modified: "last-modified"
+format: html
+execute: 
+  echo: true
+  eval: true
+  warning: false
+editor: visual
+---

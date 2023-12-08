@@ -1035,7 +1035,7 @@ Local Indicators of Spatial Association or LISA are statistics that evaluate the
 
 In this section, I will apply appropriate Local Indicators for Spatial Association (LISA), especially local Moran'I to detect cluster and/or outlier from passenger trips generate by origin at hexagon level.
 
-Positive Local Moran\'s I value indicates that a feature has neighboring features with similarly high or low attribute values which refer to a cluster. While Negative Local Moran\'s I value indicates that a feature has neighboring features with dissimilar values which refer to an outlier.
+Positive Local Moran's I value indicates that a feature has neighboring features with similarly high or low attribute values which refer to a cluster. While Negative Local Moran's I value indicates that a feature has neighboring features with dissimilar values which refer to an outlier.
 
 **Computing local Moran's I**
 
@@ -1549,6 +1549,6 @@ The existence of spatial autocorrelation led me to use local spatial autocorrela
 
 In conclusion, the insights gained from both global and local spatial autocorrelation analyses contribute to a comprehensive understanding of passenger trip patterns for targeted interventions and strategic planning which in turn help to improve the efficiency and sustainability of transportation systems in Singapore. To enhance the depth of transportation dynamics analysis, future work could explore destination-specific or individual bus route considerations.
 
-## References
+## References {#references}
 
 \[1\] <https://urbandatapalette.com/post/2021-08-tessellation-sf/>
