@@ -838,5 +838,40 @@
     "title": "Take-home_Ex1: Public Bus Passengers in Singapore",
     "section": "13 References",
     "text": "13 References\n[1] https://urbandatapalette.com/post/2021-08-tessellation-sf/"
+  },
+  {
+    "objectID": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html",
+    "href": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html",
+    "title": "In-class_Ex4",
+    "section": "",
+    "text": "In this in-class exercise, you will gain hands-on experience on the following tasks:\n\nperforming geocoding using data downloaded from data.gov.sg\ncalibrating Geographically Weighted Poisson Regression"
+  },
+  {
+    "objectID": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#overview",
+    "href": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#overview",
+    "title": "In-class_Ex4",
+    "section": "",
+    "text": "In this in-class exercise, you will gain hands-on experience on the following tasks:\n\nperforming geocoding using data downloaded from data.gov.sg\ncalibrating Geographically Weighted Poisson Regression"
+  },
+  {
+    "objectID": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#getting-started",
+    "href": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#getting-started",
+    "title": "In-class_Ex4",
+    "section": "2 Getting Started",
+    "text": "2 Getting Started\n\npacman::p_load(tidyverse, sf, httr, tmap)\n\nNotes: httr allows us to work with html (to communicate with web server."
+  },
+  {
+    "objectID": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#geocoding-using-sla-api",
+    "href": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#geocoding-using-sla-api",
+    "title": "In-class_Ex4",
+    "section": "3 Geocoding using SLA API",
+    "text": "3 Geocoding using SLA API\nAddress geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth’s surface.\nSingapore Land Authority (SLA) supports online geocoding service called OneMap API.\n\nurl &lt;- \"https://www.onemap.gov.sg/api/common/elastic/search\"\n\ncsv &lt;- read_csv(\"data/aspatial/Generalinformationofschools.csv\")\npostcodes &lt;- csv$'postal_code'\n\nfound &lt;- data.frame()\nnot_found &lt;- data.frame()\n\nfor (postcode in postcodes){\n  query &lt;- list('searchVal'=postcode,'returnGeom'='Y','getAddrDetails'='Y','pageNum'='1')\n  res&lt;-GET(url, query=query)\n  \n  if((content(res)$found)!=0){\n    found &lt;-rbind(found, data.frame(content(res))[4:13])\n  } else{\n    not_found = data.frame(postcode)\n  }\n}\n\nNotes:\n#| eval: false -&gt; run 1 time only\n#| echo: false -&gt; the code wont be shown on html page\n#| message: false -&gt; the message will not come up\n\nmerged = merge(csv, found, by.x='postal_code', by.y='results.POSTAL', all=TRUE)\nwrite.csv (merged, file='data/aspatial/schools.csv')\nwrite.csv (not_found, file ='data/aspatial/not_found.csv')"
+  },
+  {
+    "objectID": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#converting-an-aspatial-dat-ainto-a-simple-feature-tibble-data.frame",
+    "href": "In-class_Exercise/In-class_Ex4/In-class_Ex4.html#converting-an-aspatial-dat-ainto-a-simple-feature-tibble-data.frame",
+    "title": "In-class_Ex4",
+    "section": "4 Converting an aspatial dat ainto a simple feature tibble data.frame",
+    "text": "4 Converting an aspatial dat ainto a simple feature tibble data.frame\n\n4.1 Importing and tidying schools data\n\nschools &lt;- read_csv(\"data/aspatial/schools.csv\")%&gt;%\n  rename(latitude='results.LATITUDE', longitude='results.LONGITUDE')%&gt;%\n  select(postal_code, school_name, latitude,longitude)\n\n\n\n4.2 Converting an aspatial data into sf tibble data.frame\n\nschools_sf &lt;- st_as_sf(schools, \n                       coords=c('longitude', 'latitude'),\n                       crs=4326) %&gt;%\n  st_transform(crs=3414)\n\n\n\n4.3 Plotting a point simple feature layer"
   }
 ]

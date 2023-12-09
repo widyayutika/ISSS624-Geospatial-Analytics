@@ -1,0 +1,7 @@
+Total Dwelling Units: to estimation of population / proxy to calculate journey to work.
+cannot use the number of hdb, because hdb level varies.
+can try to use hdb block only?
+can use the number of 1 -room sold flats, 2-room sold flat, etc.
+
+
+80% of population stays in Singapore.
