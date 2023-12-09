@@ -94,8 +94,14 @@ ul.task-list li input[type="checkbox"] {
     <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex2/Hands-on_Ex2.html" rel="" target="">
  <span class="dropdown-text">Hands-on Exercise 2</span></a>
   </li>  
-        <li class="dropdown-header">Hands-on Exercise 3</li>
-        <li class="dropdown-header">Hands-on Exercise 4</li>
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex3/Hands-on_Ex3.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 3</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex4/Hands-on_Ex4.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 4</span></a>
+  </li>  
         <li class="dropdown-header">Hands-on Exercise 5</li>
         <li class="dropdown-header">Hands-on Exercise 6</li>
         <li class="dropdown-header">Hands-on Exercise 7</li>
@@ -130,7 +136,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex2/In-class_Ex2.html" rel="" target="">
  <span class="dropdown-text">In-class Exercise 2</span></a>
   </li>  
-        <li class="dropdown-header">In-class Exercise 3</li>
+        <li>
+    <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex3/In-class_Ex3.html" rel="" target="">
+ <span class="dropdown-text">In-class Exercise 3</span></a>
+  </li>  
         <li class="dropdown-header">In-class Exercise 4</li>
         <li class="dropdown-header">In-class Exercise 5</li>
     </ul>
@@ -210,17 +219,17 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="task-1-geovisualisation-and-analysis" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="task-1-geovisualisation-and-analysis"><span class="header-section-number">1</span> Task 1: Geovisualisation and Analysis</h2>
-<p><code>yps tm_shape(mpsz) +   tm_polygons() %&gt;%   tm_shape() +   tm_lines(lwd = "MORNING_PEAK",            style = "quantile",            scale = c(0.1, 1, 3, 5, 7, 10),            n = 6,            alpha = 0.3)}</code></p>
-<p><code>yps tmap_mode("view")  map_honeycomb = tm_shape(odbus_weekday_6_9_data) +   tm_fill(     col = "MORNING_PEAK",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("MORNING_PEAK"),     popup.format = list(       MORNING_PEAK = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
+<p><code>eqn tm_shape(mpsz) +   tm_polygons() %&gt;%   tm_shape() +   tm_lines(lwd = "MORNING_PEAK",            style = "quantile",            scale = c(0.1, 1, 3, 5, 7, 10),            n = 6,            alpha = 0.3)}</code></p>
+<p><code>eqn tmap_mode("view")  map_honeycomb = tm_shape(odbus_weekday_6_9_data) +   tm_fill(     col = "MORNING_PEAK",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("MORNING_PEAK"),     popup.format = list(       MORNING_PEAK = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
 <section id="number-of-trips-in-origin-bus-stop" class="level3" data-number="1.1">
 <h3 data-number="1.1" class="anchored" data-anchor-id="number-of-trips-in-origin-bus-stop"><span class="header-section-number">1.1</span> Number of Trips in Origin Bus Stop</h3>
 <p>The code chunk below will be used to calculate the the number of trips in each bus stop.</p>
-<p><code>yps total_trips_in_origin_busstop &lt;-odbus %&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))}</code></p>
+<p><code>eqn total_trips_in_origin_busstop &lt;-odbus %&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))}</code></p>
 </section>
 <section id="performing-relational-join" class="level3" data-number="1.2">
 <h3 data-number="1.2" class="anchored" data-anchor-id="performing-relational-join"><span class="header-section-number">1.2</span> Performing Relational Join</h3>
 <p>The code chunk below will be used to join the busstop SpatialPolygonsDataframe and original_destination_bus by the bus stop id (BUS_STOP_N for busstop and ORIGIN_PT_CODE for original_destination_bus). This is performed by using&nbsp;<em>left_join()</em>&nbsp;of&nbsp;<strong>dplyr</strong>&nbsp;package.</p>
-<p><code>yps total_trips_in_origin_busstop &lt;- left_join(busstop3414, total_trips_in_origin_busstop, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))}</code></p>
+<p><code>eqn total_trips_in_origin_busstop &lt;- left_join(busstop3414, total_trips_in_origin_busstop, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))}</code></p>
 </section>
 <section id="spatial-join-with-honeycomb-grid" class="level3" data-number="1.3">
 <h3 data-number="1.3" class="anchored" data-anchor-id="spatial-join-with-honeycomb-grid"><span class="header-section-number">1.3</span> Spatial Join with honeycomb grid</h3>
@@ -230,16 +239,16 @@ ul.task-list li input[type="checkbox"] {
 <section id="remove-grid-without-any-bus-stop" class="level3" data-number="1.4">
 <h3 data-number="1.4" class="anchored" data-anchor-id="remove-grid-without-any-bus-stop"><span class="header-section-number">1.4</span> Remove Grid Without any Bus Stop</h3>
 <p>The code chunk below will be used to remove the grid id without</p>
-<p><code>yps # Remove rows with NA values in the 'bus_stop_N' column total_trips_in_origin_busstop_honeycomb &lt;- total_trips_in_origin_busstop_honeycomb %&gt;%   filter(!is.na(BUS_STOP_N))}</code></p>
+<p><code>eqn # Remove rows with NA values in the 'bus_stop_N' column total_trips_in_origin_busstop_honeycomb &lt;- total_trips_in_origin_busstop_honeycomb %&gt;%   filter(!is.na(BUS_STOP_N))}</code></p>
 </section>
 <section id="number-of-trips-per-grid" class="level3" data-number="1.5">
 <h3 data-number="1.5" class="anchored" data-anchor-id="number-of-trips-per-grid"><span class="header-section-number">1.5</span> Number of Trips per Grid</h3>
 <p>The code chunk below is used to calculate the sum of trips in each grid. Some grids consist of more than 1 bus stop and thus the number of trips will be summed.</p>
-<p><code>yps trips_per_grid &lt;- total_trips_in_origin_busstop_honeycomb %&gt;%   group_by(grid_id) %&gt;%   summarise(total_trips = sum(TOTAL_TRIPS))}</code></p>
+<p><code>eqn trips_per_grid &lt;- total_trips_in_origin_busstop_honeycomb %&gt;%   group_by(grid_id) %&gt;%   summarise(total_trips = sum(TOTAL_TRIPS))}</code></p>
 </section>
 <section id="geovisualisation" class="level3" data-number="1.6">
 <h3 data-number="1.6" class="anchored" data-anchor-id="geovisualisation"><span class="header-section-number">1.6</span> Geovisualisation</h3>
-<p><code>yps tmap_mode("view")  map_honeycomb = tm_shape(trips_per_grid) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
+<p><code>eqn tmap_mode("view")  map_honeycomb = tm_shape(trips_per_grid) +   tm_fill(     col = "total_trips",     palette = "Reds",     style = "cont",     title = "Number of Trips",     id = "grid_id",     showNA = FALSE,     alpha = 0.6,     popup.vars = c("total_trips"),     popup.format = list(       total_trips = list(format = "f", digits = 0))   ) +   tm_borders(col = "grey40", lwd = 0.7)  map_honeycomb}</code></p>
 </section>
 <section id="deeper-analysis-on-peak-hours" class="level3" data-number="1.7">
 <h3 data-number="1.7" class="anchored" data-anchor-id="deeper-analysis-on-peak-hours"><span class="header-section-number">1.7</span> Deeper Analysis on Peak Hours</h3>
@@ -249,19 +258,19 @@ ul.task-list li input[type="checkbox"] {
 </tbody>
 </table>
 <p>The chunk code below is to ???</p>
-<p><code>yps weekday_morning &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 6 &amp; TIME_PER_HOUR &lt;= 9) &amp; DAY_TYPE == 'WEEKDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))  weekday_afternoon &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 17 &amp; TIME_PER_HOUR &lt;= 20) &amp; DAY_TYPE == 'WEEKDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))  weekend_holiday_morning &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 11 &amp; TIME_PER_HOUR &lt;= 14) &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))  weekend_holiday__evening &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 16 &amp; TIME_PER_HOUR &lt;= 19) &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))}</code></p>
+<p><code>eqn weekday_morning &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 6 &amp; TIME_PER_HOUR &lt;= 9) &amp; DAY_TYPE == 'WEEKDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))  weekday_afternoon &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 17 &amp; TIME_PER_HOUR &lt;= 20) &amp; DAY_TYPE == 'WEEKDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))  weekend_holiday_morning &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 11 &amp; TIME_PER_HOUR &lt;= 14) &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))  weekend_holiday__evening &lt;- origin_destination_bus %&gt;%   filter((TIME_PER_HOUR &gt;= 16 &amp; TIME_PER_HOUR &lt;= 19) &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY')%&gt;%   group_by(ORIGIN_PT_CODE) %&gt;%   summarise(TOTAL_TRIPS=sum(TOTAL_TRIPS))}</code></p>
 </section>
 <section id="left-join" class="level3" data-number="1.8">
 <h3 data-number="1.8" class="anchored" data-anchor-id="left-join"><span class="header-section-number">1.8</span> Left join</h3>
-<p><code>yps weekday_morning &lt;- left_join(busstop, weekday_morning, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))  weekday_afternoon &lt;- left_join(busstop, weekday_afternoon, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))  weekend_holiday_morning &lt;- left_join(busstop, weekend_holiday_morning, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))  weekend_holiday__evening &lt;- left_join(busstop, weekend_holiday__evening, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))}</code></p>
+<p><code>eqn weekday_morning &lt;- left_join(busstop, weekday_morning, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))  weekday_afternoon &lt;- left_join(busstop, weekday_afternoon, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))  weekend_holiday_morning &lt;- left_join(busstop, weekend_holiday_morning, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))  weekend_holiday__evening &lt;- left_join(busstop, weekend_holiday__evening, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))}</code></p>
 </section>
 <section id="spatially-join" class="level3" data-number="1.9">
 <h3 data-number="1.9" class="anchored" data-anchor-id="spatially-join"><span class="header-section-number">1.9</span> Spatially join</h3>
-<p><code>yps # Spatially join the trip data with the honeycomb grid #busstop_weekday_morning_honeycomb &lt;- st_join(honeycomb_grid_sf,busstop_weekday_morning)  # Remove rows with NA values in the 'bus_stop_N' column #busstop_weekday_morning_honeycomb &lt;- busstop_weekday_morning_honeycomb %&gt;% #  filter(!is.na(BUS_STOP_N))}</code></p>
-<p><code>yps # Group by grid ID and calculate the sum of TOTAL_TRIPS #trips_per_grid_busstop_weekday_morning &lt;- busstop_weekday_morning_honeycomb %&gt;% #  group_by(grid_id) %&gt;%  # summarise(total_trips = sum(TOTAL_TRIPS))}</code></p>
-<p><code>yps #tmap_mode("view")  #map_honeycomb = tm_shape(trips_per_grid_busstop_weekday_morning) + #  tm_fill(  #   col = "total_trips",  #   palette = "Reds",   #  style = "cont",   #  title = "Number of Trips",   #  id = "grid_id",    # showNA = FALSE,   #  alpha = 0.6,   #  popup.vars = c("total_trips"),   #  popup.format = list(   #    total_trips = list(format = "f", digits = 0))  ## ) +  # tm_borders(col = "grey40", lwd = 0.7)  #map_honeycomb}</code></p>
+<p><code>eqn # Spatially join the trip data with the honeycomb grid #busstop_weekday_morning_honeycomb &lt;- st_join(honeycomb_grid_sf,busstop_weekday_morning)  # Remove rows with NA values in the 'bus_stop_N' column #busstop_weekday_morning_honeycomb &lt;- busstop_weekday_morning_honeycomb %&gt;% #  filter(!is.na(BUS_STOP_N))}</code></p>
+<p><code>eqn # Group by grid ID and calculate the sum of TOTAL_TRIPS #trips_per_grid_busstop_weekday_morning &lt;- busstop_weekday_morning_honeycomb %&gt;% #  group_by(grid_id) %&gt;%  # summarise(total_trips = sum(TOTAL_TRIPS))}</code></p>
+<p><code>eqn #tmap_mode("view")  #map_honeycomb = tm_shape(trips_per_grid_busstop_weekday_morning) + #  tm_fill(  #   col = "total_trips",  #   palette = "Reds",   #  style = "cont",   #  title = "Number of Trips",   #  id = "grid_id",    # showNA = FALSE,   #  alpha = 0.6,   #  popup.vars = c("total_trips"),   #  popup.format = list(   #    total_trips = list(format = "f", digits = 0))  ## ) +  # tm_borders(col = "grey40", lwd = 0.7)  #map_honeycomb}</code></p>
 <pre class="{r} # Check the class of the geometry column #class(trips_per_grid_busstop_weekday_morning$geometry)}"><code></code></pre>
-<p><code>yps  #filtered_df &lt;- origin_destination_bus %&gt;%  # filter(   #  (TIME_PER_HOUR %in% peak_hours$`WeekdayMorningPeak` &amp; DAY_TYPE == 'WEEKDAY') |    # (TIME_PER_HOUR %in% peak_hours$`WeekdayAfternoonPeak` &amp; DAY_TYPE == 'WEEKDAY') |     #(TIME_PER_HOUR %in% peak_hours$`Weekend/holidayMorningPeak` &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY') |     #(TIME_PER_HOUR %in% peak_hours$`Weekend/holidayEveningPeak` &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY')   #)}</code></p>
+<p><code>eqn  #filtered_df &lt;- origin_destination_bus %&gt;%  # filter(   #  (TIME_PER_HOUR %in% peak_hours$`WeekdayMorningPeak` &amp; DAY_TYPE == 'WEEKDAY') |    # (TIME_PER_HOUR %in% peak_hours$`WeekdayAfternoonPeak` &amp; DAY_TYPE == 'WEEKDAY') |     #(TIME_PER_HOUR %in% peak_hours$`Weekend/holidayMorningPeak` &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY') |     #(TIME_PER_HOUR %in% peak_hours$`Weekend/holidayEveningPeak` &amp; DAY_TYPE == 'WEEKENDS/HOLIDAY')   #)}</code></p>
 
 
 </section>
