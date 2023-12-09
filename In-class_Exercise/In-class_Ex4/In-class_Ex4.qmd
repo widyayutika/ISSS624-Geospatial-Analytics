@@ -1,5 +1,5 @@
 ---
-title: "In-class_Ex4"
+title: "In-class_Ex4: SIMs"
 author: "Widya Tantiya Yutika"
 date: "09 December 2023"
 date-modified: "last-modified"
@@ -70,7 +70,7 @@ write.csv (merged, file='data/aspatial/schools.csv')
 write.csv (not_found, file ='data/aspatial/not_found.csv')
 ```
 
-## Converting an aspatial dat ainto a simple feature tibble data.frame
+## Converting an aspatial data into a simple feature tibble data.frame
 
 ### Importing and tidying schools data
 
@@ -92,3 +92,167 @@ schools_sf <- st_as_sf(schools,
 ```
 
 ### Plotting a point simple feature layer
+
+```{r}
+tmap_mode("view")
+tm_shape(schools_sf)+
+  tm_dots()+
+tm_view(set.zoom.limits =c(11,14))
+tmap_mode("plot")
+```
+
+## Preparing
+
+```{r}
+mpsz <- st_read(dsn="data/geospatial", layer="MPSZ-2019")%>%
+  st_transform(crs=3414)
+```
+
+```{r}
+mpsz$'SCHOOL_COUNT' <- lengths(st_intersects(mpsz, schools_sf))
+```
+
+```{r}
+summary(mpsz$SCHOOL_COUNT)
+```
+
+```{r}
+business_sf <- st_read(dsn="data/geospatial", layer="Business")
+```
+
+```{r}
+tmap_options(check.and.fix=TRUE)
+tm_shape(mpsz)+
+  tm_polygons()+
+tm_shape(business_sf)+
+  tm_dots()
+
+```
+
+```{r}
+mpsz$'BUSINESS_COUNT' <- lengths(st_intersects(mpsz, business_sf))
+summary(mpsz$BUSINESS_COUNT)
+```
+
+```{r}
+#|eeval: false
+#flow_data <- flow_data %>%
+#  left_join(mpsz_tidy,
+#            by =c("DESTIN_SZ"="SUBZONE_C"))
+```
+
+Notes: calibrate journey to home : then change to ORIGIN_SZ
+
+## Checking for variables with zero values
+
+## Model Calibration
+
+```{r}
+pacman::p_load(tmap, sf, performance, ggpubr, tidyverse)
+```
+
+## The Data
+
+```{r}
+flow_data<-read_rds("data/rds/flow_data_tidy.rds")
+```
+
+```{r}
+glimpse(flow_data)
+```
+
+Notes: business small scale and middle scale industry; retail mainly for shopping purposes.
+
+Notes: change to morning_peak to TRIPS and dist to DIST (because there is a dist function in R)
+
+```{r}
+flow_data$FlowNoIntra <- ifelse(
+  flow_data$ORIGIN_SZ==flow_data$DESTIN_SZ,
+  0, flow_data$MORNING_PEAK)
+flow_data$offset <-ifelse(
+  flow_data$ORIGIN_SZ==flow_data$DESTIN_SZ,
+  0.000001,1
+)
+```
+
+```{r}
+inter_zonal_flow <- flow_data %>%
+  filter(FlowNoIntra >0)
+```
+
+```{r}
+inter_zonal_flow <- inter_zonal_flow %>%
+  rename(TRIPS= MORNING_PEAK,
+         DIST=dist)
+```
+
+### Origin(Production) constrained SIM
+
+```{r}
+orcSIM_Poisson <- glm(formula = TRIPS ~ 
+                        ORIGIN_SZ +
+                        log(SCHOOL_COUNT)+
+                        log(RETAIL_COUNT)+
+                        log(DIST) -1,
+                      family = poisson (link='log'),
+                      data = inter_zonal_flow,
+                      na.action = na.exclude)
+summary(orcSIM_Poisson)
+```
+
+Notes1: The purpose of -1 on log(DIST) is to remove the intercept.
+
+Notes2: need to look at log(SCHOOL_COUNT) , log(RETAIL_COUNT), log(DIST), p-value
+
+-   log(SCHOOL_COUNT) , log(RETAIL_COUNT) -\> attractiveness, need to be positive but if crime rate need to be negative (people dont want to stay near area with high crime rate)
+
+```{=html}
+<!-- -->
+```
+-   log(DIST) -\> need to be negative(inverse distance), meaning that the closer the distance, people are more willing to go
+
+-   p-value \< 0.0.5 -\> if not \<0.05 need to recalibrate the model, remove the variables
+
+### Goodness-of-Fit
+
+```{r}
+CalcRSquared <- function (observed, estimated){
+  r<- cor(observed, estimated)
+  R2 <- r^2
+  R2
+}
+```
+
+```{r}
+CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
+```
+
+```{r}
+performance_rmse(orcSIM_Poisson, normalized= FALSE)
+```
+
+### Doubly Constrained
+
+```{r}
+dbcSIM_Poisson <- glm(formula = TRIPS ~
+                        ORIGIN_SZ+
+                        DESTIN_SZ+
+                        log(DIST),
+                      family = poisson(link='log'),
+                      data= inter_zonal_flow,
+                      na.action= na.exclude
+                      )
+dbcSIM_Poisson
+```
+
+```{r}
+model_list <- list(originConstrained=orcSIM_Poisson, doublyConstrained=dbcSIM_Poisson)
+```
+
+```{r}
+compare_performance(model_list, metrics="RMSE")
+```
+
+Notes: smaller RMSE -\> better model
+
+Notes: if there is an outlier, try to remove and compare with current model.

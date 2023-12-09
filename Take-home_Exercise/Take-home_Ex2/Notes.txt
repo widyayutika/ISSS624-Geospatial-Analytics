@@ -5,3 +5,12 @@ can use the number of 1 -room sold flats, 2-room sold flat, etc.
 
 
 80% of population stays in Singapore.
+
+Use condo_resale_2015
+
+
+Choose 1 time period: 
+Weekday Morning Peak: people journey to work or school
+Weekday Afternoon Peak:go home
+Weekend/holiday Morning Peak:go recreational/shopping
+Weekend/holiday Evening Peak:go home after recreational
