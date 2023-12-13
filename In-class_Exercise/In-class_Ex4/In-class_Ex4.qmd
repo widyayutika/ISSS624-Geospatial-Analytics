@@ -206,9 +206,8 @@ Notes2: need to look at log(SCHOOL_COUNT) , log(RETAIL_COUNT), log(DIST), p-valu
 
 -   log(SCHOOL_COUNT) , log(RETAIL_COUNT) -\> attractiveness, need to be positive but if crime rate need to be negative (people dont want to stay near area with high crime rate)
 
-```{=html}
 <!-- -->
-```
+
 -   log(DIST) -\> need to be negative(inverse distance), meaning that the closer the distance, people are more willing to go
 
 -   p-value \< 0.0.5 -\> if not \<0.05 need to recalibrate the model, remove the variables
