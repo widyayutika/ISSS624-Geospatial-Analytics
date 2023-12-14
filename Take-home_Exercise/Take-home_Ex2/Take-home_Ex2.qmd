@@ -11,9 +11,13 @@ execute:
 editor: visual
 ---
 
-## Overview
+## Setting the Scene
 
-Urban mobility challenges encompass understanding the driving forces behind early morning commutes for city dwellers and evaluating the impact of removing public bus services along specific routes, presenting complex issues for transport operators and urban managers. Traditional commuter surveys, though effective, are costly and time-consuming. With the digitization of urban infrastructures, particularly public transportation, massive geospatial data sets are generated through technologies like GPS and SMART cards. However, the inability to efficiently utilize this data can hinder effective decision-making. This exercise aims to address two key issues: the lack of research on integrating diverse open data sources for policymaking and the insufficient exploration of geospatial data science for decision support. The objective is to conduct a case study showcasing the potential of geospatial data science in integrating publicly available data to build spatial interaction models, explaining factors influencing urban mobility patterns in public bus.
+Urban mobility challenges encompass understanding the driving forces behind early morning commutes for city dwellers and evaluating the impact of removing public bus services along specific routes, presenting complex issues for transport operators and urban managers. Traditional commuter surveys, though effective, are costly and time-consuming. With the digitization of urban infrastructures, particularly public transportation, massive geospatial data sets are generated through technologies like GPS and SMART cards. However, the inability to efficiently utilize this data can hinder effective decision-making. This exercise aims to address two key issues: the lack of research on integrating diverse open data sources for policymaking and the insufficient exploration of geospatial data science for decision support.
+
+## Objective
+
+The objective is to conduct a case study showcasing the potential of geospatial data science in integrating publicly available data to build spatial interaction models, explaining factors influencing urban mobility patterns in public bus.
 
 ## **The Study Area and Data**
 
@@ -40,6 +44,39 @@ Urban mobility challenges encompass understanding the driving forces behind earl
 -   Instructor-curated Datasets for Educational Purpose
 
     -   *Business*, *entertn*, *F&B*, *FinServ*, *Leisure&Recreation* and *Retails* consisting locations of business establishments, entertainments, food and beverage outlets, financial centres, leisure and recreation centres, retail and services stores/outlets.
+
+## The Task
+
+The specific tasks of this take-home exercise are as follows:
+
+### **Geospatial Data Science**
+
+-   Derive an analytical hexagon data of 375m (this distance is the perpendicular distance between the centre of the hexagon and its edges) to represent the [traffic analysis zone (TAZ)](https://tmg.utoronto.ca/files/Reports/Traffic-Zone-Guidance_March-2021_Final.pdf).
+
+-   With reference to the time intervals provided in the table below, construct an O-D matrix of commuter flows for a time interval of your choice by integrating *Passenger Volume by Origin Destination Bus Stops* and *Bus Stop Location* from [LTA DataMall](https://datamall.lta.gov.sg/content/datamall/en.html). The O-D matrix must be aggregated at the analytics hexagon level
+
+    |       Peak hour period       | Bus tap on time |
+    |:----------------------------:|:---------------:|
+    |     Weekday morning peak     |   6am to 9am    |
+    |    Weekday afternoon peak    |   5pm to 8pm    |
+    | Weekend/holiday morning peak |   11am to 2pm   |
+    | Weekend/holiday evening peak |   4pm to 7pm    |
+
+-   Display the O-D flows of the passenger trips by using appropriate geovisualisation methods (not more than 5 maps).
+
+-   Describe the spatial patterns revealed by the geovisualisation (not more than 100 words per visual).
+
+-   Assemble at least three propulsive and three attractiveness variables by using aspatial and geospatial from publicly available sources.
+
+-   Compute a distance matrix by using the analytical hexagon data derived earlier.
+
+### **Spatial Interaction Modelling**
+
+-   Calibrate spatial interactive models to determine factors affecting urban commuting flows at the selected time interval.
+
+-   Present the modelling results by using appropriate geovisualisation and graphical visualisation methods. (Not more than 5 visuals)
+
+-   With reference to the Spatial Interaction Model output tables, maps and data visualisation prepared, describe the modelling results. (not more than 100 words per visual).
 
 ## **Setting the Analytical Tools**
 
@@ -71,11 +108,11 @@ The code chunk below is used to ensure that the necessary R packages have been i
 pacman::p_load(sf, spdep, tmap, tidyverse, knitr, sp, reshape2, stplanr, httr)
 ```
 
-## **Preparing the Flow Data**
+## **Working with Aspatial Data (Commuter Flow)**
 
 ### **Importing OD Csv File into R Environment**
 
-Next, I will import *Passenger Volume by Origin Destination Bus Stops* data set: *origin_destination_bus_202310.csv* into R by using [*`st_read()`*](#0){style="font-size: 11pt;"} of **readr** package. The output is R dataframe class.
+Next, I will import *Passenger Volume by Origin Destination Bus Stops* data set: *origin_destination_bus_202310.csv downloaded from LTA Datamall for October 2023* into R by using [*`st_read()`*](#0){style="font-size: 11pt;"} of **readr** package. The output is R dataframe class.
 
 ```{r}
 #| code-fold: true  
@@ -100,16 +137,7 @@ odbus$ORIGIN_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
 odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE) 
 ```
 
-I will also change the data type of TIME_PER_HOUR and TOTAL_TRIPS from \<dbl\> to \<int\> because it both of these fields should be represented as whole numbers.
-
-```{r}
-#| code-fold: true  
-#| code-summary: "Show the code"  
-odbus$TIME_PER_HOUR <- as.integer(odbus$TIME_PER_HOUR)
-odbus$TOTAL_TRIPS <- as.integer(odbus$TOTAL_TRIPS) 
-```
-
-Next, I will confirm the data type for ORIGIN_PT_CODE and DESTINATION_PT_CODE have changed to factor using glimpse().
+Next, I will confirm the data type changes using glimpse().
 
 ```{r}
 #| code-fold: true  
@@ -117,18 +145,35 @@ Next, I will confirm the data type for ORIGIN_PT_CODE and DESTINATION_PT_CODE ha
 glimpse(odbus)
 ```
 
+### Checking for Duplicate Commuter Flow
+
+```{r}
+#| code-fold: true 
+#| #| code-summary: "Show the code" 
+duplicate_rec <- odbus %>%   
+  group_by_all() %>%   
+  filter(n()>1) %>%   
+  ungroup()
+```
+
+There is no duplicate record found on odbus dataset.
+
 ### Extracting the Study Data
 
-For the purpose of this take-home exercise, I will extract commuting flows on weekday and between 5 and 8 pm.
+For the purpose of this take-home exercise, I will extract commuting flows on Weekend/holiday morning peak which is between 11am to 2pm.
 
 ```{r}
 #| code-fold: true   
 #| #| code-summary: "Show the code"
-odbus17_20 <- odbus %>%      
-  filter(DAY_TYPE == "WEEKDAY") %>%      
-  filter(TIME_PER_HOUR >= 17 & TIME_PER_HOUR <= 20) %>%
+odbus11_14 <- odbus %>%      
+  filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%      
+  filter(TIME_PER_HOUR >= 11 & TIME_PER_HOUR <= 14) %>%
   group_by(ORIGIN_PT_CODE,DESTINATION_PT_CODE) %>%
   summarise(TRIPS = sum(TOTAL_TRIPS))
+```
+
+```{r}
+glimpse(odbus11_14)
 ```
 
 ## Working with Geospatial Data
@@ -137,7 +182,7 @@ odbus17_20 <- odbus %>%
 
 -   Bus Stop Location
 
-The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import BusStop shapefile into R. The imported shapefile will be **simple features** Object of **sf**. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21.
+The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import BusStop shapefile into R. The imported shapefile will be **simple features** Object of **sf**. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21 (projected coordinate system for Singapore).
 
 ```{r}
 #| code-fold: true 
@@ -146,9 +191,28 @@ busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
   st_transform(crs = 3414)
 ```
 
+#### Checking Duplicate Bus Stop
+
+```{r}
+#| code-fold: true 
+#| #| code-summary: "Show the code" 
+duplicate_bus_stop <- busstop %>%   
+  group_by(BUS_STOP_N) %>%   
+  filter(n()>1)
+```
+
+There are 16 duplicated records with same BUS_STOP_N but different geometry points. However, upon investigation, the coordinates are quite near to each other, this lead to the possibility of temporary bus stop. In view of this, I will remove the duplicated records and only keep the first occurrence using the code chunk below
+
+```{r}
+#| code-fold: true 
+#| #| code-summary: "Show the code" 
+busstop <- busstop %>%   
+  distinct(BUS_STOP_N, .keep_all =TRUE)
+```
+
 -   *Master Plan 2019 Subzone Boundary*
 
-The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import MPSZ-19 shapefile into R. The imported shapefile will be **simple features** Object of **sf**. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21.
+The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import MPSZ-19 shapefile into R. The imported shapefile will be **simple features** Object of **sf**. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21 (projected coordinate system for Singapore).
 
 ```{r}
 #| code-fold: true 
@@ -157,105 +221,117 @@ mpsz <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
   st_transform(crs = 3414)
 ```
 
-## Creating honeycomb_grid
+### Creating Honeycomb/Hexagon Layer
 
-Honeycomb grid are preferred to replace coarse and irregular Master Plan 2019 Sub-zone GIS data set of URA because hexagon reduce sampling bias due to its grid shape of low perimeter to are ratio and its ability to form evenly spaced grid. Honeycomb grids are well-suited for approximating circular areas, making them suitable for mapping Singapore edges with irregular shape.
+Honeycomb layer are preferred to replace coarse and irregular Master Plan 2019 Sub-zone GIS data set of URA because hexagon reduce sampling bias due to its grid shape of low perimeter to are ratio and its ability to form evenly spaced grid. Honeycomb grids are well-suited for approximating circular areas, making them suitable for mapping Singapore edges with irregular shape.
 
-The code chunk below uses [*`st_make_grid`*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of **sf** package to create a hexagonal or honeycomb grid with a 375m (perpendicular distance between the center of hexagon and its edges) to represent the [traffic analysis zone (TAZ)](https://tmg.utoronto.ca/files/Reports/Traffic-Zone-Guidance_March-2021_Final.pdf). According the the R documentation, the cellsize is the distance between opposite edges, which is 2 times the perpendicular distance between the center of hexagon and its edges. Thus, for the purpose of this exercise, I will use the cellsize of 750m and indicate the square=FALSE for hexagonal grid. After doing do, I will create a grid_id for each hexagonal grid.
+The code chunk below uses [*`st_make_grid`*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of **sf** package to create a hexagonal or honeycomb grid with a 375m (perpendicular distance between the center of hexagon and its edges) to represent the [traffic analysis zone (TAZ)](https://tmg.utoronto.ca/files/Reports/Traffic-Zone-Guidance_March-2021_Final.pdf). According the the R documentation, the cellsize is the distance between opposite edges, which is 2 times the perpendicular distance between the center of hexagon and its edges. Thus, for the purpose of this exercise, I will use cellsize of 750m and indicate the square=FALSE for hexagonal grid. After doing do, I will create a grid_id for each hexagonal grid (2,541 hexagonal grid).
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-area_honeycomb_grid = st_make_grid(busstop, c(750, 750), what = "polygons", square = FALSE)      
+area_honeycomb_grid = st_make_grid(busstop, cellsize=750, what = "polygons", square = FALSE)      
 # To sf and add grid ID    
 honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
   # add grid ID            
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 ```
 
-## Data Wrangling for Geospatial Data
+Next, I will only retain the hexagons with at least 1 bus stop in it.
+
+```{r}
+honeycomb_grid_sf$busstop_count = lengths(st_intersects(honeycomb_grid_sf, busstop))
+
+
+honeycomb_with_busstop = filter(honeycomb_grid_sf, busstop_count > 0)
+```
+
+There are 834 hexagonal units with at least 1 busstop.
+
+```{r}
+plot(honeycomb_with_busstop['busstop_count'], 
+     main = 'Bus Stop Count in Each Hexagonal Grid')
+```
+
+Some hexagonal grids are highly packed with a maximum of 19 bus stops shown in yellow color above.
+
+### Data Wrangling with Geospatial Data
 
 #### Combining Busstop and honeycomb_grid_sf
 
-```{r}
-#busstop_mpsz <- st_intersection(busstop, mpsz)
-```
+In this section, I uses [`st_intersection()`](https://r-spatial.github.io/sf/reference/geos_binary_ops.html#arguments) from **sp** package to overlap the bus stop points and hexagonal grids.
 
 ```{r}
-#| code-fold: true  
-#| code-summary: "Show the code"  
-#area_honeycomb_grid1 = st_make_grid(busstop_mpsz, c(750, 750), what = "polygons", square = FALSE)      
-# To sf and add grid ID    
-#honeycomb_grid_sf1 = st_sf(area_honeycomb_grid1) %>%
-  # add grid ID            
-  #mutate(grid_id = 1:length(lengths(area_honeycomb_grid1)))
-```
-
-The code chunk below populates the honeycomb id (i.e. grid_id) of honeycomb_grid_sf data frame into busstop sf data frame.
-
-```{r}
-#busstop_honeycomb <- st_intersection(busstop_mpsz, honeycomb_grid_sf) %>%
-#  select(BUS_STOP_N, grid_id) %>%
-#  st_drop_geometry()
-```
-
-Notes: There are 5 bus stops outside Singapore boundary which are excluded.
-
-```{r}
-busstop_honeycomb <- st_intersection(busstop, honeycomb_grid_sf) %>%
-  select(BUS_STOP_N, grid_id) %>%
+busstop_honeycomb <- st_intersection(busstop, honeycomb_with_busstop) %>%
+  select(BUS_STOP_N, LOC_DESC, grid_id) %>%
   st_drop_geometry()
 ```
 
-### Combining Aspatial and Geospatial Data
+## Build an OD Matrix of Commuter Flows for Weekends/Holiday Morning Peak Hour
 
-The code chunk below append the planning subzone code from busstop_mpsz data frame onto odbus17_20 data frame.
+In this section, I will construct a matrix for Origin and Destination with the Trips counts on each combinations.
+
+First, I will append "ORIGIN_GRID_ID" and "ORIGIN_LOC_DESC" from busstop_honeycomb data frame onto odbus11_14 data frame using the code chunk below.
 
 ```{r}
-od_data <- left_join(odbus17_20 , busstop_honeycomb,
+od_data <- left_join(odbus11_14 , busstop_honeycomb,
             by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
   rename(ORIGIN_BS = ORIGIN_PT_CODE,
-         ORIGIN_SZ = grid_id,
-         DESTIN_BS = DESTINATION_PT_CODE)
+         ORIGIN_GRID_ID = grid_id,
+         DESTIN_BS = DESTINATION_PT_CODE,
+         ORIGIN_LOC_DESC = LOC_DESC)
 ```
 
-#### Checking Duplicate Records
-
-The code chunk below is used to check for duplicated records on od_data.
+Next, I will check for duplicated records on od_data using the chunk code below.
 
 ```{r}
 #| code-fold: true 
 #| #| code-summary: "Show the code" 
-duplicate <- od_data %>%   
+duplicate_od_data <- od_data %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
   ungroup()
 ```
 
-The above code chunk shows that there are some duplicates record found. The code chunk below will be used to retain the unique records.
+The above code chunk shows that there are no duplicate record found.
 
-```{r}
-od_data <- unique(od_data)
-```
-
-Next, we will update od_data data frame with the honeycomb grid_id.
+Next, I will update od_data data frame by performing another left join with busstop_honeycomb to get the "DESTIN_GRID_ID" and "DESTIN_LOC_DESC".
 
 ```{r}
 od_data <- left_join(od_data , busstop_honeycomb,
-            by = c("DESTIN_BS" = "BUS_STOP_N")) 
+            by = c("DESTIN_BS" = "BUS_STOP_N")) %>%
+  rename(DESTIN_GRID_ID = grid_id,
+         DESTIN_LOC_DESC = LOC_DESC)
 ```
+
+```{r}
+missing_values <- colSums(is.na(od_data))
+
+# Print the columns with missing values
+print(missing_values)
+```
+
+The missing grid_id for origin and destination bus stop may be due to the outdated Bus Stop Location Data which is uploaded on July 2023 as compared to the Passenger Volume by Origin Destination Bus Stops data collected in October 2023.
+
+So, I will remove the rows with NA and calculate the number of trips on weekends/holiday morning peak hour by using the group_by "ORIGIN_GRID_ID" and "DESTIN_GRID_ID" and sum all the trips between each combination of hexagonal grid ids using the code chunk below.
 
 ```{r}
 od_data <- od_data %>%
-  rename(DESTIN_SZ = grid_id) %>%
-  drop_na() %>%
-  group_by(ORIGIN_SZ, DESTIN_SZ) %>%
-  summarise(AFTERNOON_PEAK = sum(TRIPS)) %>%
-  filter(!is.na(AFTERNOON_PEAK))
+  drop_na()
 ```
 
 ```{r}
-summary(od_data$AFTERNOON_PEAK)
+od_data1 <- od_data %>%
+  group_by(ORIGIN_GRID_ID, DESTIN_GRID_ID) %>%
+  summarise(AFTERNOON_PEAK = sum(TRIPS),
+            ORIGIN_DESC = paste(unique(ORIGIN_LOC_DESC), collapse = ', '),
+            DESTIN_DESC = paste(unique(DESTIN_LOC_DESC), collapse = ', '))
+```
+
+I will check the distribution of the Afternoon Peak trips using summary as shown below.
+
+```{r}
+summary(od_data1$AFTERNOON_PEAK)
 ```
 
 I will save the output into an rds file format.
@@ -268,83 +344,38 @@ write_rds(od_data, "data/rds/od_data.rds")
 od_data <- read_rds("data/rds/od_data.rds")
 ```
 
-## **Visualising Spatial Interaction**
+## **Computing Distance Matrix by** Analytics Hexagon Level
 
-In this section, you will learn how to prepare a desire line by using **stplanr** package.
-
-### **Removing intra-zonal flows**
-
-We will not plot the intra-zonal flows. The code chunk below will be used to remove intra-zonal flows.
+First [`as.Spatial()`](https://r-spatial.github.io/sf/reference/coerce-methods.html) from **sp** package will be used to convert honeycomb_with_busstop from sf tibble data frame to SpatialPolygonsDataFrame of sp object as shown in the code chunk below. This method is used because it is faster to compute distance matrix using sp than sf package.
 
 ```{r}
-od_data1 <- od_data[od_data$ORIGIN_SZ!=od_data$DESTIN_SZ,]
+honeycomb_with_busstop_sp <- as(honeycomb_with_busstop, "Spatial") 
+honeycomb_with_busstop_sp
 ```
 
-### **Creating desire lines**
-
-In this code chunk below, `od2line()` of **stplanr** package is used to create the desire lines.
+Next, [`spDists()`](https://www.rdocumentation.org/packages/sp/versions/2.1-1/topics/spDistsN1) of **sp** package will be used to compute the Euclidean distance between the centroids of the hexagons. When longlat is set to FALSE, spDists will return a full matrix of distances in the metric of points. While longlat is set to TRUE, it will return in kilometers. In my case, since there are 834 hexagon, amtrix of 834 x 834 will be created and I will print out the first 8 rows using head().
 
 ```{r}
-flowLine <- od2line(flow = od_data1, zones = honeycomb_grid_sf, zone_code = "grid_id")
-
-```
-
-### **Visualising the desire lines**
-
-```{r}
-honeycomb_grid_with_busstop <- honeycomb_grid_sf[honeycomb_grid_sf$grid_id %in% c(unique(flowLine$ORIGIN_SZ), unique(flowLine$DESTIN_SZ)), ] 
-```
-
-```{r}
-
-```
-
-To visualise the resulting desire lines, the code chunk below is used.
-
-```{r}
-#tmap_options(check.and.fix = TRUE)
-tmap_mode("view")
-#tm_shape(mpsz)+
-  #tm_polygons()+
-tm_shape(honeycomb_grid_with_busstop) +   
-  tm_polygons(col = "lightblue") + 
-  flowLine %>%
-  filter(AFTERNOON_PEAK >= 5000) %>%
-  tm_shape() +   
-  tm_lines(lwd = "AFTERNOON_PEAK",            
-           style = "quantile",            
-           scale = c(0.1, 1, 3, 5, 7, 10),            
-           n = 6,            
-           alpha = 0.3)+
-  tm_view(set.zoom.limits =c(11,14))
-
-tmap_mode("plot")
-```
-
-The blue hexagonal grid refers to the grid with busstop and the plot above only show the flowline with more or equal than 5000trips.
-
-## **Computing Distance Matrix**
-
-### **Converting from sf data.table to SpatialPolygonsDataFrame**
-
-In view of this, sp method is used in the code chunks below.
-
-First [`as.Spatial()`](https://r-spatial.github.io/sf/reference/coerce-methods.html) will be used to convert *mpsz* from sf tibble data frame to SpatialPolygonsDataFrame of sp object as shown in the code chunk below.
-
-```{r}
-honeycomb_grid_with_busstop_sp <- as(honeycomb_grid_with_busstop, "Spatial") 
-honeycomb_grid_with_busstop_sp
-```
-
-### **Computing the distance matrix**
-
-```{r}
-dist <- spDists(honeycomb_grid_with_busstop_sp, 
+dist <- spDists(honeycomb_with_busstop_sp, 
                 longlat = FALSE)
-head(dist, n=c(10, 10))
+head(dist, n=c(8, 8))
 ```
 
-### **Pivoting distance value by grid_id**
+From the matrix above, it is noticed that both the column and row headers are not labelled by grid_id. So, I label the headers by first creating a list sorted according to the distance matrix by grid_id and followed by attaching the grid_id to row and column for distance matrix matching.
+
+```{r}
+grid_id_desc <- honeycomb_with_busstop$grid_id
+
+colnames(dist) <- paste0(grid_id_desc)
+rownames(dist) <- paste0(grid_id_desc)
+head(dist, n=c(8,8))
+```
+
+Next, I will pivot the distance matrix into a long table by using the row and column grid_id using melt() of reshape2 package to convert wide-format data to long-format data.
+
+For reference : <https://www.statology.org/long-vs-wide-data/>
+
+![Wide Long Format](figure/wide_long_data.png)
 
 ```{r}
 distPair <- melt(dist) %>%
@@ -352,7 +383,13 @@ distPair <- melt(dist) %>%
 head(distPair, 10)
 ```
 
-### **Updating intra-zonal distances**
+There are 695556 rows of distPair as the number of possible pair of hexagon permutations.
+
+```{r}
+summary(distPair$dist)
+```
+
+From the summary of "dist" above, it is noticed that there are 0 distance, this refer to intra-zonal distance meaning that the trips are taken from same grid id. Since my minimum inter-zonal distance is 750m, it will set my intra-zonal distance to value below 750/2 = 375m. So, I choose a value of 350m for intra-zonal distance.
 
 ```{r}
 distPair %>%
@@ -360,25 +397,130 @@ distPair %>%
   summary()
 ```
 
-Next, a constant distance value of 375m is added into intra-zones distance. (the distance within the hexagonal grid).
+```{r}
+distPair$dist <- ifelse(distPair$dist == 0, 350, distPair$dist)
+```
+
+Next, I will rename var1 and var 2 into origin and destination grid_id.
 
 ```{r}
-distPair$dist <- ifelse(distPair$dist == 0, 375, distPair$dist)
+distPair <- distPair %>%
+  rename(ORIGIN_GRID_ID = Var1,
+         DESTIN_GRID_ID = Var2)
 ```
 
 ```{r}
-distPair %>%
-  summary()
+summary(distPair$dist)
 ```
 
-## **Preparing flow data**
+## **Preparing Flow Data**
+
+In this section, I will rename my od_data1 to flow_data.
 
 ```{r}
-flow_data1 <- od_data1 %>%
+flow_data <- od_data1
+
+print(head(flow_data))
+```
+
+### **Separating Intra-Flow from flow_data Data Frame**
+
+The code chunk below is used to add two new fields in `flow_data` dataframe.
+
+-   'FlowNoIntra' : 0 for intra-zonal flow and AFTERNOON_PEAK for inter-zonal flow
+
+-   'offset' : a very small number (i.e. 0.000001) for intra-zonal flow and 1 for inter-zonal flow
+
+```{r}
+flow_data$FlowNoIntra <- ifelse(
+  flow_data$ORIGIN_GRID_ID == flow_data$DESTIN_GRID_ID, 
+  0, flow_data$AFTERNOON_PEAK)
+flow_data$offset <- ifelse(
+  flow_data$ORIGIN_GRID_ID == flow_data$DESTIN_GRID_ID, 
+  0.000001, 1)
+```
+
+I will create 2 separate data frames for intra and inter zonal flow.
+
+```{r}
+intra_zonal_flow <- flow_data %>% 
+  filter(FlowNoIntra ==0)
+
+inter_zonal_flow <- flow_data %>% 
+  filter(FlowNoIntra >0)
+```
+
+From a total of 62176 flow data, there are 568 intra-zonal flow and 61,608 inter-zonal flow.
+
+```{r}
+intra_zonal_flow
+```
+
+```{r}
+# Count the number of rows where "origin" contains "TUAS"
+count_tuas <- sum(grepl("TUAS", intra_zonal_flow$ORIGIN_DESC, ignore.case = TRUE))
+
+# Print the result
+print(paste("Number of rows with 'TUAS' in 'origin':", count_tuas))
+```
+
+### **Combining Passenger Volume Data (Inter-Zonal Flow Data) with Distance Value**
+
+Before we can join "*inter_zonal_flow*" and "*distPair"*, I will convert data value type of *ORIGIN_GRID_ID* and *DESTIN_GRID_ID* fields of both dataframe into factor data type.
+
+```{r}
+inter_zonal_flow$ORIGIN_GRID_ID <- as.factor(inter_zonal_flow$ORIGIN_GRID_ID) 
+inter_zonal_flow$DESTIN_GRID_ID  <- as.factor(inter_zonal_flow$DESTIN_GRID_ID)
+distPair$ORIGIN_GRID_ID  <- as.factor(distPair$ORIGIN_GRID_ID)
+distPair$DESTIN_GRID_ID  <- as.factor(distPair$DESTIN_GRID_ID )
+```
+
+Now, `left_join()` of **dplyr** will be used to combine "*inter_zonal_flow"* dataframe and *distPair* dataframe. The output is called *flow_data1*.
+
+```{r}
+flow_data1 <- inter_zonal_flow %>%
   left_join (distPair,
-             by = c("ORIGIN_SZ" = "Var1",
-                    "DESTIN_SZ" = "Var2"))
+             by = c("ORIGIN_GRID_ID" = "ORIGIN_GRID_ID",
+                    "DESTIN_GRID_ID" = "DESTIN_GRID_ID"))
+print(head(flow_data1))
 ```
+
+## **Visualising O-D Flows of Weekends/Holiday Morning Peak Hour**
+
+In this section, I will create a desire line of inter-zonal flow (flow_data1) by using `od2line` of **stplanr** package.
+
+```{r}
+flowLine <- od2line(flow = flow_data1, zones = honeycomb_with_busstop, zone_code = "grid_id") 
+```
+
+### **Visualising the desire lines**
+
+To visualise the resulting desire lines, the code chunk below is used.
+
+```{r}
+tmap_options(check.and.fix = TRUE) 
+tmap_mode("plot") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.5)+ 
+tm_shape(honeycomb_with_busstop) +
+  tm_polygons(col = "lightblue", alpha=0.5) +    
+  flowLine %>%   filter(AFTERNOON_PEAK >= 5000) %>%   tm_shape() +
+  tm_lines(lwd = "AFTERNOON_PEAK",                        
+           style = "quantile", 
+           scale = c(0.1, 1, 3, 5, 7, 10),                        
+           n = 6,                        
+           alpha = 0.3,
+           col="red")+   
+  tm_view(set.zoom.limits =c(11,14))+
+  tm_layout(main.title = 'OD Flow On Weekends/Holiday Morning Peak Hour' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            main.title.fontface = 'bold',
+            legend.width=1.2) +
+tmap_mode("plot")
+```
+
+The blue hexagonal grid refers to the grid with busstop and the plot above only show the flowline with more or equal than 5000trips.
 
 ## School Dataset
 
@@ -619,4 +761,10 @@ tm_shape(honeycomb_grid_sf %>%
 tmap_mode("plot")
 ```
 
-### Flow_Data_Tidy
+## Flow_Data_Tidy
+
+## 
+
+## Reference
+
+1.  <https://www.statology.org/long-vs-wide-data/>
