@@ -257,8 +257,6 @@ Some hexagonal grids are highly packed with a maximum of 19 bus stops shown in y
 
 ### Data Wrangling with Geospatial Data
 
-#### Combining Busstop and honeycomb_grid_sf
-
 In this section, I uses [`st_intersection()`](https://r-spatial.github.io/sf/reference/geos_binary_ops.html#arguments) from **sp** package to overlap the bus stop points and hexagonal grids.
 
 ```{r}
@@ -323,15 +321,15 @@ od_data <- od_data %>%
 ```{r}
 od_data1 <- od_data %>%
   group_by(ORIGIN_GRID_ID, DESTIN_GRID_ID) %>%
-  summarise(AFTERNOON_PEAK = sum(TRIPS),
+  summarise(MORNING_PEAK = sum(TRIPS),
             ORIGIN_DESC = paste(unique(ORIGIN_LOC_DESC), collapse = ', '),
             DESTIN_DESC = paste(unique(DESTIN_LOC_DESC), collapse = ', '))
 ```
 
-I will check the distribution of the Afternoon Peak trips using summary as shown below.
+I will check the distribution of the Morning Peak trips using summary as shown below.
 
 ```{r}
-summary(od_data1$AFTERNOON_PEAK)
+summary(od_data1$MORNING_PEAK)
 ```
 
 I will save the output into an rds file format.
@@ -427,14 +425,14 @@ print(head(flow_data))
 
 The code chunk below is used to add two new fields in `flow_data` dataframe.
 
--   'FlowNoIntra' : 0 for intra-zonal flow and AFTERNOON_PEAK for inter-zonal flow
+-   'FlowNoIntra' : 0 for intra-zonal flow and MORNING_PEAK for inter-zonal flow
 
 -   'offset' : a very small number (i.e. 0.000001) for intra-zonal flow and 1 for inter-zonal flow
 
 ```{r}
 flow_data$FlowNoIntra <- ifelse(
   flow_data$ORIGIN_GRID_ID == flow_data$DESTIN_GRID_ID, 
-  0, flow_data$AFTERNOON_PEAK)
+  0, flow_data$MORNING_PEAK)
 flow_data$offset <- ifelse(
   flow_data$ORIGIN_GRID_ID == flow_data$DESTIN_GRID_ID, 
   0.000001, 1)
@@ -454,14 +452,6 @@ From a total of 62176 flow data, there are 568 intra-zonal flow and 61,608 inter
 
 ```{r}
 intra_zonal_flow
-```
-
-```{r}
-# Count the number of rows where "origin" contains "TUAS"
-count_tuas <- sum(grepl("TUAS", intra_zonal_flow$ORIGIN_DESC, ignore.case = TRUE))
-
-# Print the result
-print(paste("Number of rows with 'TUAS' in 'origin':", count_tuas))
 ```
 
 ### **Combining Passenger Volume Data (Inter-Zonal Flow Data) with Distance Value**
@@ -493,46 +483,133 @@ In this section, I will create a desire line of inter-zonal flow (flow_data1) by
 flowLine <- od2line(flow = flow_data1, zones = honeycomb_with_busstop, zone_code = "grid_id") 
 ```
 
-### **Visualising the desire lines**
-
-To visualise the resulting desire lines, the code chunk below is used.
+To visualise the resulting desire lines, the code chunk below is used. In the map below, I have filtered out the trips of less than 5000 for ease of analysis. Thicker line width refers to the flow with more trips while the length of the desire lines refers to the distance of each inter-zonal flow.
 
 ```{r}
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("plot") 
 tm_shape(mpsz)+   
-  tm_polygons(alpha=0.5)+ 
+  tm_polygons(alpha=0.5)+
+  tm_text(text = "SUBZONE_N", size = 0.2) +
 tm_shape(honeycomb_with_busstop) +
   tm_polygons(col = "lightblue", alpha=0.5) +    
-  flowLine %>%   filter(AFTERNOON_PEAK >= 5000) %>%   tm_shape() +
-  tm_lines(lwd = "AFTERNOON_PEAK",                        
+  flowLine %>%   filter(MORNING_PEAK >= 5000) %>%   
+  tm_shape() +
+  tm_lines(lwd = "MORNING_PEAK",                        
            style = "quantile", 
-           scale = c(0.1, 1, 3, 5, 7, 10),                        
+           scale = c(0.5, 2, 4, 6, 8, 10, 12),                        
            n = 6,                        
            alpha = 0.3,
            col="red")+   
-  tm_view(set.zoom.limits =c(11,14))+
-  tm_layout(main.title = 'OD Flow On Weekends/Holiday Morning Peak Hour' ,
+  tm_layout(main.title = 'Static Map: OD Flow On Weekends/Holiday Morning Peak Hour' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            legend.width=1)
+```
+
+From the map above, I observed a noticeable concentration of public bus flow in the Woodlands Area and Johor Bahru (hexagon outside of Singapore boundary) as indicated by a thick bank extending between the two for weekends/holiday morning peak hour. We will further analyse whether the flow is from Singapore or from Johor Bahru.
+
+```{r}
+flowLine %>% filter(MORNING_PEAK >= 30000)
+```
+
+The public bus flow suggest that the predominant movement is from Woodlands Checkpoint to Johor Bahru Checkpoint with around 43k trips. The flow from Johor Bahru Checkpoint to Singapore is also comparably high with around 31k trips. This public bus commuter flow could be attributed to individuals engaging in leisure activities, entertainment, tourism, family/friend visit in Johor/Singapore, some even take advantage of cost-effective grocery shopping in Johor.
+
+```{r}
+summary((flowLine %>% filter(MORNING_PEAK >= 5000))$dist)
+```
+
+Furthermore, I observed that during weekend morning, the predominant public bus flow spans a relatively short distance with a maximum of 2.7 kilometers. This phenomenon may be attributed to the fact that weekends are typically considered rest days, leading to shorter commutes or more localized activities within a confined radius. Alternatively, individuals may opt for different modes of transport like MRT longer transfers. In the view of activities in confined redius, I will also analyse intra-zonal flows.
+
+```{r}
+intra_flow_map <- honeycomb_with_busstop %>%
+  inner_join(intra_zonal_flow, by = c("grid_id" = "ORIGIN_GRID_ID")) %>%
+  rename("LOC_DESC"="ORIGIN_DESC") %>%
+  select("grid_id","LOC_DESC","MORNING_PEAK","busstop_count","area_honeycomb_grid")
+
+intra_flow_map <- intra_flow_map %>%
+  mutate(short_loc_desc = str_extract(LOC_DESC, "^[^,]+"))
+```
+
+```{r}
+tmap_options(check.and.fix = TRUE) 
+tmap_mode("view") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.5)+ 
+tm_shape(intra_flow_map) +
+  tm_borders() +
+  tm_fill("MORNING_PEAK", palette = "Blues",
+          title = "Morning Peak",
+          breaks= c(1,1000,5000,8000,11000,14500),
+          legend.show = TRUE,
+          popup.vars = c("Location Description" ="short_loc_desc",
+                         "Trips Count"="MORNING_PEAK",
+                         "Bus Stop Count"="busstop_count"
+                         )) +
+  tm_view(set.zoom.limits =c(11,17))+
+  tm_layout(main.title = 'Intra Flow On Weekends/Holiday Morning Peak Hour' ,
             main.title.position = "center",
             main.title.size = 1.0,
             main.title.fontface = 'bold',
-            legend.width=1.2) +
-tmap_mode("plot")
+            legend.width=1)
+tmap_mode("plot") 
 ```
 
-The blue hexagonal grid refers to the grid with busstop and the plot above only show the flowline with more or equal than 5000trips.
+From the map above, the intra public bus flow occurs in the vicinity of Admiralty Int, BLK 126 CP (Bukit Merah and Tiong Bahru Area). This suggested that there is a significant volume occuring within a short distance in the specified areas.
 
-## School Dataset
+The below code chunk is for the interactive maps to get more insights.
 
-### **Geocoding using SLA API**
+```{r}
+tmap_options(check.and.fix = TRUE) 
+tmap_mode("view") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.5)+
+tm_shape(honeycomb_with_busstop) +
+  tm_polygons(col = "lightblue", alpha=0.5) +    
+  flowLine %>%   filter(MORNING_PEAK >= 5000) %>%   
+  tm_shape() +
+  tm_lines(lwd = "MORNING_PEAK",                        
+           style = "quantile", 
+           scale = c(2, 6, 8, 10, 8, 12, 14),                        
+           n = 6,                        
+           alpha = 0.3,
+           col="red",
+           popup.vars=c("Origin Description"="ORIGIN_DESC",
+                        "Destination Description" ="DESTIN_DESC",
+                        "Trips Count" ="MORNING_PEAK"))+   
+  tm_view(set.zoom.limits =c(11,17))+
+  tm_layout(main.title = 'Static Map: OD Flow On Weekends/Holiday Morning Peak Hour' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            main.title.fontface = 'bold')
+```
+
+From the map above, I also noticed that there are some great volume to hexagonal grid with bus interchanges or MRt/LRT stations such as Boonlay, Choa Chu Kang, Bukit Panjang, Yee Tew, Clementi, Bishan, Ang Mo Kio, Serangoon, Toa Payoh, Sengkang, Bedok, Tampines, Pasir Ris, which can be one of the factor to be considered for my Spatial Interaction Model later on.
+
+## Assemble Propulsive(Origin) and Attractiveness(Destination) Variables for Spatial Interaction Model
+
+### Aspatial Data 1 : School Location
+
+First, I will import the School General Information in csv format which is downloaded from data.gov.sg for School Directory and Information. This dataset consist of school name and postal code for MOE Kindergartens, Primary Schools, Secondary Schools, Junior College, Mixed Levels and Centralized Institute for pre-university. In total, there are 346 records. Since the data set does not include polytechnics and ITE, I will collate the information from [moe.gov.sg](https://www.moe.gov.sg/schoolfinder?journey=MOE%20Kindergarten). Currently, there are 8 polytechnics/ITE. Next, I will merge the 2 dasasets and so in total there are 354 schools.
+
+```{r}
+school <- read_csv("data/aspatial/Generalinformationofschools.csv")
+poly_ite <- read_csv("data/aspatial/poly_ite.csv")
+
+poly_ite <- poly_ite %>% 
+  rename(school_name = poly_ite_name) %>% 
+  mutate(postal_code = as.character(postal_code))
+
+merged_school <- bind_rows(school, poly_ite)
+```
+
+Next, I will use OneMap API to geocode the school locations by retriving the longitude and latitude coordinates using the postal_code field.
 
 ```{r}
 #|eval: false
 url <- "https://www.onemap.gov.sg/api/common/elastic/search"
 
-csv <- read_csv("data/aspatial/Generalinformationofschools.csv")
-postcodes <- csv$'postal_code'
-
+postcodes <- merged_school$'postal_code'
 found <- data.frame()
 not_found <- data.frame()
 
@@ -546,15 +623,46 @@ for (postcode in postcodes){
     not_found = data.frame(postcode)
   }
 }
+
+merged = merge(merged_school, found, by.x='postal_code', by.y='results.POSTAL', all=TRUE)
+```
+
+It is noticed that the number of rows are increasing, there may be duplicated rows and upon checking, there are 8 duplicated rows so I will remove the duplicated rows.
+
+```{r}
+duplicate_school <- merged %>%
+  group_by_all() %>%
+  filter(n()>1) %>%
+  ungroup()
 ```
 
 ```{r}
-#merged = merge(csv, found, by.x='postal_code', by.y='results.POSTAL', all=TRUE)
-#write.csv (merged, file='data/aspatial/schools.csv')
-#write.csv (not_found, file ='data/aspatial/not_found.csv')
+merged <- merged %>%
+  distinct(across(everything()), .keep_all = TRUE)
 ```
 
-### **Importing and tidying schools data**
+Then , I will check wehther there is any postal code that cannot be geocode using the code chunk below.
+
+```{r}
+not_found
+```
+
+There is 1 postal code that cannot be geocode which is 677741. In this case, I will manually extract the longitude (103.7651) and latitude(1.389279) for this specific postal code and fill the NA values with the code chunk below
+
+```{r}
+merged <- merged %>%
+  mutate(results.LATITUDE = ifelse(postal_code == "677741", 1.389279, results.LATITUDE)) %>%
+  mutate(results.LONGITUDE = ifelse(postal_code == "677741", 103.7651, results.LONGITUDE))
+```
+
+I will then write the merged file into a csv file.
+
+```{r}
+write.csv (merged, file='data/aspatial/schools.csv')
+write.csv (not_found, file ='data/aspatial/not_found.csv')
+```
+
+Next, I will import the schools final data set and tidy it up (i.e. renaming the column headers) and only extract necessary fields using the code chunk below.
 
 ```{r}
 schools <- read_csv("data/aspatial/schools.csv") %>%
@@ -562,7 +670,7 @@ schools <- read_csv("data/aspatial/schools.csv") %>%
   select(postal_code, school_name, latitude,longitude)
 ```
 
-### **Converting an aspatial data into sf tibble data.frame**
+Then, I will convert the school coordinates into Singapore Projected Coordinate System SVY21 after converting to sf object.
 
 ```{r}
 schools_sf <- st_as_sf(schools, 
@@ -571,32 +679,50 @@ schools_sf <- st_as_sf(schools,
   st_transform(crs=3414)
 ```
 
+After that, I will count the number of schools in each heaxgon using the **`st_intersects()`** of **sp** package.
+
 ```{r}
-honeycomb_grid_sf$'SCHOOL_COUNT' <- lengths(st_intersects(honeycomb_grid_sf, schools_sf))
+honeycomb_with_busstop$'SCHOOL_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, schools_sf))
+```
+
+Next, I will check the school_count distributions using summary().
+
+```{r}
+summary(honeycomb_with_busstop$SCHOOL_COUNT)
 ```
 
 ```{r}
-summary(honeycomb_grid_sf$SCHOOL_COUNT)
+tmap_options(check.and.fix = TRUE) 
+tmap_mode("view") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.3)+
+tm_shape(honeycomb_with_busstop%>% filter(SCHOOL_COUNT>0)) +
+  tm_borders() +
+  tm_fill("SCHOOL_COUNT", palette = "Blues",
+          title = "School Count",
+          breaks= c(1,2,3,4,4),
+          legend.show = TRUE,
+          alpha=0.7) +
+  tm_view(set.zoom.limits =c(11,14))+
+  tm_layout(main.title = 'SCHOOL COUNT on Hexagonal Grid' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            main.title.fontface = 'bold',
+            legend.width=1)
+tmap_mode("plot") 
 ```
 
-```{r}
-tmap_mode("view")
-tm_shape(honeycomb_grid_sf %>% filter(SCHOOL_COUNT>0)) +   
-  tm_polygons(col = "lightblue") + 
-  tm_text("SCHOOL_COUNT", size=0.8) +
-  tm_view(set.zoom.limits =c(11,14))
+From the above map, it is noticeable that schools are spread across Singapore and some area like Punggol, Sengkang have more schools as compared to other areas and the CBD and Tuas area has fewer schools.
 
+### Aspatial Data 2 : HDB Location
 
-tmap_mode("plot")
-```
-
-## HDB Dataset
+I will import the hdb in csv format provided and collated by Prof. Kam. This data set is the geocoded version of *HDB Property Information* data from [Data.gov.sg](https://beta.data.gov.sg/). The data set is prepared using September 2021 data, consisting of 12,442 records with 37 columns.
 
 ```{r}
 hdb <- read_csv("data/aspatial/hdb.csv")
 ```
 
-### **Converting an aspatial data into sf tibble data.frame**
+Next, I will convert the longitude and latitude from WSG84 to Singapore Projected Coordinate System SVY21 using **`st_transform()`**.
 
 ```{r}
 hdb_sf <- st_as_sf(hdb,                         
@@ -605,98 +731,421 @@ hdb_sf <- st_as_sf(hdb,
   st_transform(crs=3414)
 ```
 
+Next, I will check for duplicated hdb.
+
 ```{r}
-hdb_count <- st_intersection(honeycomb_grid_sf, hdb_sf) %>%
+duplicate_hdb <- hdb_sf %>%   
+  group_by(blk_no,street) %>%   
+  filter(n()>1) %>%   
+  ungroup()
+```
+
+There are no duplicated hdb, so next, I will count the dwelling units in each hexagonal grid.
+
+```{r}
+dwelling_units_count <- st_intersection(honeycomb_with_busstop, hdb_sf) %>%
   group_by(grid_id) %>%
   summarise(HDB_DWELLING_UNIT=sum(total_dwelling_units)) %>%
   st_drop_geometry()
 ```
 
 ```{r}
-honeycomb_grid_sf = left_join(honeycomb_grid_sf, hdb_count)
+honeycomb_with_busstop = left_join(honeycomb_with_busstop, dwelling_units_count)
+```
+
+Next, I will check the distribution of dwelling units in Singapore.
+
+```{r}
+summary(honeycomb_with_busstop$HDB_DWELLING_UNIT)
+```
+
+Next, I will NA with 0, meaning there is the hexagonal grid is not a residential area.
+
+```{r}
+honeycomb_with_busstop <- honeycomb_with_busstop %>%
+  mutate(HDB_DWELLING_UNIT = replace_na(HDB_DWELLING_UNIT, 0))
 ```
 
 ```{r}
-summary(honeycomb_grid_sf$HDB_DWELLING_UNIT)
-```
-
-```{r}
-#tmap_mode("view")
-tmap_mode("plot")
 tmap_options(check.and.fix = TRUE) 
-tm_shape(mpsz)+
-  tm_polygons()+
-tm_shape(honeycomb_grid_sf %>% filter(HDB_DWELLING_UNIT>0)) +   
-  tm_polygons(col="HDB_DWELLING_UNIT", alpha=0.6, breaks=c(1,800,1600,2400,3200,4800,8000)) + 
-  #tm_text("HDB_DWELLING_UNIT", size=0.8) +
-  tm_view(set.zoom.limits =c(11,14))
-
-
-tmap_mode("plot")
+tmap_mode("view") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.3)+
+tm_shape(honeycomb_with_busstop%>% filter(HDB_DWELLING_UNIT>0)) +
+  tm_borders() +
+  tm_fill("HDB_DWELLING_UNIT", palette = "Blues",
+          title = "HDB Dwelling Units Count",
+          breaks= c(1,1000,2000,4000,6000,7946),
+          legend.show = TRUE,
+          alpha=0.7) +
+  tm_view(set.zoom.limits =c(11,14))+
+  tm_layout(main.title = 'HDB Dwelling Units on Hexagonal Grid' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            main.title.fontface = 'bold',
+            legend.width=1)
+tmap_mode("plot") 
 ```
 
-## Business Layer
+From the map above, the HDB spread across Singapore with high concentration on Punggol, Sengkang, Tampine, Bedok, Woodlands, Yishun, Choa Chu Kang, Jurong West.
+
+### Geospatial Data 1 : Business
+
+This business data is curated by Prof. Kam, consisting locations of business establishments in Singapore. It consists of 6,550 point coordinates of business location in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
 business_sf <- st_read(dsn="data/geospatial", layer="Business")
 ```
 
+Next, I will check for duplicated business.
+
 ```{r}
-honeycomb_grid_sf$'BUSINESS_COUNT' <- lengths(st_intersects(honeycomb_grid_sf, business_sf))
+#| code-fold: true 
+#| #| code-summary: "Show the code" 
+duplicate_business <- business_sf %>%   
+  group_by_all() %>%   
+  filter(n()>1) %>%   
+  ungroup()
+```
+
+Apparently there are 2 duplicate businesses, so I will remove the duplicated records and keep the first occurrence.
+
+```{r}
+business_sf<- unique(business_sf)
+```
+
+Next, I will count the number of businesses in each hexagonal grid.
+
+```{r}
+honeycomb_with_busstop$'BUSINESS_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, business_sf))
+
+```
+
+Next, I will check the distribution of BUSINESS_COUNT.
+
+```{r}
+summary(honeycomb_with_busstop$'BUSINESS_COUNT')
 ```
 
 ```{r}
-summary(honeycomb_grid_sf$'BUSINESS_COUNT')
-```
-
-```{r}
-#tmap_mode("view")
-tmap_mode("plot")
 tmap_options(check.and.fix = TRUE) 
-tm_shape(mpsz)+
-  tm_polygons()+
-tm_shape(honeycomb_grid_sf %>% filter(BUSINESS_COUNT>0)) +   
-  tm_polygons(col="BUSINESS_COUNT", alpha=0.6, breaks=c(1,5,10,20,30,97)) + 
-  #tm_text("BUSINESS_COUNT", size=0.8) +
-  #tm_view(set.zoom.limits =c(11,14))
-tmap_mode("plot")
+tmap_mode("view") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.3)+
+tm_shape(honeycomb_with_busstop%>% filter(BUSINESS_COUNT>0)) +
+  tm_borders() +
+  tm_fill("BUSINESS_COUNT", palette = "Blues",
+          title = "Business Count",
+          breaks= c(1,10,20,30,50,97),
+          legend.show = TRUE,
+          alpha=0.7) +
+  tm_view(set.zoom.limits =c(11,14))+
+  tm_layout(main.title = 'BUSINESS COUNT on Hexagonal Grid' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            main.title.fontface = 'bold',
+            legend.width=1)
+tmap_mode("plot") 
 ```
 
-## Entertainment Layer
+From the map above, for business, it is observed that certain regions especially industrial area like Jurong West to Tuas Area, Woodlands Industrial Area, Kaki Bukit Industrial Estate, Loyang Industrial Estate, exhibits a higher concentration of businesses. The CBD/ Downtown area also has high number of businesses as it is the main commercial area in Singapore.
+
+### Geospatial Data 2 : Entertainment
+
+This entertainment data is curated by Prof. Kam, consisting of 114 point coordinates of entertainment area like cinema, theatre, art centers in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
 entertainment_sf <- st_read(dsn="data/geospatial", layer="entertn")
 ```
 
+Next, I will check for duplicated entertainment.
+
 ```{r}
-honeycomb_grid_sf$'ENTERTAINMENT_COUNT' <- lengths(st_intersects(honeycomb_grid_sf, entertainment_sf))
+#| code-fold: true 
+#| #| code-summary: "Show the code" 
+duplicate_entertn <- entertainment_sf %>%   
+  group_by_all() %>%   
+  filter(n()>1) %>%   
+  ungroup()
+```
+
+Apparently there are 2 duplicate entertainments, so I will remove the duplicated records and keep the first occurrence.
+
+```{r} entertainment_sf<- unique(entertainment_sf)}
+```
+
+Next, I will count the number of entertainments in each hexagonal grid.
+
+```{r}
+honeycomb_with_busstop$'ENTERTAINMENT_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, entertainment_sf))
+```
+
+Next, I will check the distribution of ENTERTAINMENT_COUNT.
+
+```{r}
+summary(honeycomb_with_busstop$'ENTERTAINMENT_COUNT')
 ```
 
 ```{r}
-summary(honeycomb_grid_sf$'ENTERTAINMENT_COUNT')
-```
-
-```{r}
-tmap_mode("plot")
 tmap_options(check.and.fix = TRUE) 
-tm_shape(mpsz)+
-  tm_polygons()+
-tm_shape(honeycomb_grid_sf %>% 
-           filter(ENTERTAINMENT_COUNT>0)) +      
-  tm_polygons(col="ENTERTAINMENT_COUNT", alpha=0.6, breaks=c(1,4,7,9)) +    
-  #tm_view(set.zoom.limits =c(11,14))  
-tmap_mode("plot")
+tmap_mode("view") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.3)+
+tm_shape(honeycomb_with_busstop%>% filter(ENTERTAINMENT_COUNT>0)) +
+  tm_borders() +
+  tm_fill("ENTERTAINMENT_COUNT", palette = "Blues",
+          title = "Entertainment Count",
+          breaks= c(1,3,5,7,9),
+          legend.show = TRUE,
+          alpha=0.7) +
+  tm_view(set.zoom.limits =c(11,14))+
+  tm_layout(main.title = 'ENTERTAINMENT COUNT on Hexagonal Grid' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            main.title.fontface = 'bold',
+            legend.width=1)
+tmap_mode("plot") 
 ```
 
-## F&B
+From the map above, it is observed that CBD area especially city hall to bugis area exhibits a higher concentration of entertainment in Singapore.
 
-## Financial Service
+### Geospatial Data 3 : F&B
 
-## Leisure and Recreation
+This F&B data is curated by Prof. Kam, consisting of 1,919 point coordinates of F&B area like cafe, restaurant, bar, club, karaoke, pub in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
-## Retails
+```{r}
+fnb_sf <- st_read(dsn="data/geospatial", layer="F&B")
+```
 
-## Train Station
+Next, I will check for duplicated F&B.
+
+```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+duplicate_fnb <- fnb_sf %>%      
+  group_by_all() %>%      
+  filter(n()>1) %>%      
+  ungroup()
+```
+
+There are no duplicated F&B so next, I will count the number of F&B in each hexagonal grid.
+
+```{r}
+honeycomb_with_busstop$'FNB_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, fnb_sf))
+```
+
+Next, I will check the distribution of FNB_COUNT.
+
+```{r}
+summary(honeycomb_with_busstop$'FNB_COUNT')
+```
+
+```{r}
+tmap_options(check.and.fix = TRUE)  
+tmap_mode("view")  
+tm_shape(mpsz)+      
+  tm_polygons(alpha=0.3)+ 
+  tm_shape(honeycomb_with_busstop%>% 
+             filter(FNB_COUNT>0)) +   
+  tm_borders() +   
+  tm_fill("FNB_COUNT", 
+          palette = "Blues",           
+          title = "FNB Count",           
+          breaks= c(1,10,20,30,50,70,100,133),           
+          legend.show = TRUE,           
+          alpha=0.7) +   
+  tm_view(set.zoom.limits =c(11,14))+   
+  tm_layout(main.title = 'FNB COUNT on Hexagonal Grid' ,             
+            main.title.position = "center",             
+            main.title.size = 1.0,             
+            main.title.fontface = 'bold',             
+            legend.width=1) 
+tmap_mode("plot") 
+```
+
+From the map above, similar to entertainment, it is observed that CBD area especially tanjong pagar to bugis area exhibits a higher concentration of F&Bin Singapore.
+
+### Geospatial Data 4 : Financial Service
+
+This Financial Service data is curated by Prof. Kam, consisting \]of 3,320 point coordinates of financial service area like bank, money changer in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
+
+```{r}
+finserv_sf <- st_read(dsn="data/geospatial", layer="FinServ")
+```
+
+Next, I will check for duplicated financial services.
+
+```{r}
+#| code-fold: true   
+#| code-summary: "Show the code"   
+duplicate_finserv <- finserv_sf %>%         
+  group_by_all() %>%         
+  filter(n()>1) %>%         
+  ungroup()
+```
+
+Apparently there are 524 duplicate financial services, so I will remove the duplicated records and keep the first occurrence. So, in total there are 3,058 financial services.
+
+```{r}
+finserv_sf<- unique(finserv_sf)
+```
+
+Next, I will count the number of financial services in each hexagonal grid.
+
+```{r}
+honeycomb_with_busstop$'FINSERV_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, finserv_sf))
+```
+
+Next, I will check the distribution of FINSERV_COUNT.
+
+```{r}
+summary(honeycomb_with_busstop$'FINSERV_COUNT')
+```
+
+```{r}
+tmap_options(check.and.fix = TRUE)   
+tmap_mode("view")   
+tm_shape(mpsz)+
+  tm_polygons(alpha=0.3)+    
+  tm_shape(honeycomb_with_busstop%>%               
+             filter(FINSERV_COUNT>0)) + 
+  tm_borders() +      
+  tm_fill("FINSERV_COUNT",            
+          palette = "Blues",                      
+          title = "Financial Service Count",                      
+          breaks= c(1,10,20,30,50,70,100,133),                      
+          legend.show = TRUE,                      
+          alpha=0.7) +      
+  tm_view(set.zoom.limits =c(11,14))+      
+  tm_layout(main.title = 'Financial Service COUNT on Hexagonal Grid' ,      
+            main.title.position = "center",                          
+            main.title.size = 1.0,                          
+            main.title.fontface = 'bold',                          
+            legend.width=1)  
+tmap_mode("plot") 
+```
+
+From the map above, similar to f&b, it is observed that CBD area especially Tanjong Pagar to Bugis area exhibits a higher concentration of Financial Services in Singapore.
+
+### Geospatial Data 5 : Leisure and Recreation
+
+This Leisure and Recreation data is curated by Prof. Kam, consisting of 1,217 point coordinates of Leisure and Recreation area like gallery, museum, sport center, park, fitness, playground, studio in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
+
+```{r}
+lei_rec_sf <- st_read(dsn="data/geospatial", layer="Liesure&Recreation")
+```
+
+Next, I will check for duplicated Leisure and Recreation.
+
+```{r}
+#| code-fold: true    
+#| code-summary: "Show the code"    
+duplicate_lei_rec <- lei_rec_sf %>%            
+  group_by_all() %>%            
+  filter(n()>1) %>%            
+  ungroup()
+```
+
+There is no duplicated Leisure and Recreation so next, I will count the number of Leisure and Recreation in each hexagonal grid.
+
+```{r}
+honeycomb_with_busstop$'LEIREC_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, lei_rec_sf))
+```
+
+Next, I will check the distribution of LEIREC_COUNT.
+
+```{r}
+summary(honeycomb_with_busstop$'LEIREC_COUNT')
+```
+
+```{r}
+tmap_options(check.and.fix = TRUE)    
+tmap_mode("view")    
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.3)+       
+  tm_shape(honeycomb_with_busstop%>%                             
+             filter(LEIREC_COUNT>0)) +    
+  tm_borders() +         
+  tm_fill("LEIREC_COUNT",                       
+          palette = "Blues",                                 
+          title = "Leisure and Recreation Count",                                 
+          breaks= c(1,10,20,30,41),                                 
+          legend.show = TRUE,                                 
+          alpha=0.7) +         
+  tm_view(set.zoom.limits =c(11,14))+         
+  tm_layout(main.title = 'Leisure and Recreation Count on Hexagonal Grid' ,        
+            main.title.position = "center",                                      
+            main.title.size = 1.0,                                       
+            main.title.fontface = 'bold',                                       
+            legend.width=1)   
+tmap_mode("plot") 
+```
+
+From the map above, it is observed that Downtown area exhibits a higher concentration of Leisure and Recreation in Singapore.
+
+### Geospatial Data 6 : Retails
+
+This Retails data is curated by Prof. Kam, consisting of 37,635 point coordinates of Retails area like retail shops in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
+
+```{r}
+retail_sf <- st_read(dsn="data/geospatial", layer="Retails")
+```
+
+Next, I will check for duplicated Retails.
+
+```{r}
+#| code-fold: true     
+#| code-summary: "Show the code"     
+duplicate_retail <- retail_sf %>%               
+  group_by_all() %>%               
+  filter(n()>1) %>%               
+  ungroup()
+```
+
+Apparently there are 347 duplicate Retails, so I will remove the duplicated records and keep the first occurrence. So, in total there are 37,460 Retails.
+
+```{r}
+retail_sf<- unique(retail_sf)
+```
+
+Next, I will count the number of Retails in each hexagonal grid.
+
+```{r}
+honeycomb_with_busstop$'RETAILS_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, retail_sf))
+```
+
+Next, I will check the distribution of RETAILS_COUNT.
+
+```{r}
+summary(honeycomb_with_busstop$'RETAILS_COUNT')
+```
+
+```{r}
+tmap_options(check.and.fix = TRUE)     
+tmap_mode("view")     
+tm_shape(mpsz)+      
+  tm_polygons(alpha=0.3)+          
+  tm_shape(honeycomb_with_busstop%>%                                           filter(RETAILS_COUNT>0)) +       
+  tm_borders() +            
+  tm_fill("RETAILS_COUNT",                                  
+          palette = "Blues",                                            
+          title = "Retails  Count",                                            breaks= c(1,100,500,1000,1500,1669),                                            
+          legend.show = TRUE,                                            
+          alpha=0.7) +            
+  tm_view(set.zoom.limits =c(11,14))+            
+  tm_layout(main.title = 'Retails Count on Hexagonal Grid' ,   
+            main.title.position = "center",                                       
+            main.title.size = 1.0,                                              
+            main.title.fontface = 'bold',                                         
+            legend.width=1)    
+tmap_mode("plot") 
+```
+
+From the map above, it is observed that Bugis area exhibits a higher concentration of Retails in Singapore.
+
+### Geospatial Data 7 : Train Station
+
+This Train Station data is downloaded from [LTA DataMall](https://datamall.lta.gov.sg/content/datamall/en.html), consisting of 37,635 point coordinates of Retails area like retail shops in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
 train_station_sf <- st_read(dsn="data/geospatial", layer="RapidTransitSystemStation") %>%
@@ -734,36 +1183,140 @@ tm_shape(honeycomb_grid_sf %>%
 tmap_mode("plot")
 ```
 
-## MRT Station EXIT
+### Geospatial Data 8: MRT Station EXIT
+
+This MRT Station Exit data is downloaded from [LTA DataMall](https://datamall.lta.gov.sg/content/datamall/en.html), consisting of 565 point coordinates of MRT Exits in Singapore. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21 (projected coordinate system for Singapore).
 
 ```{r}
 MRT_exit_sf <- st_read(dsn="data/geospatial", layer="Train_Station_Exit_Layer") %>%
   st_transform(crs = 3414)
 ```
 
+Next, I will check for duplicated MRT Exits.
+
 ```{r}
-honeycomb_grid_sf$'MRT_EXIT_COUNT' <- lengths(st_intersects(honeycomb_grid_sf, MRT_exit_sf))
+#| code-fold: true      
+#| code-summary: "Show the code"      
+duplicate_MRT_exit <- MRT_exit_sf %>%                  
+  group_by(stn_name,exit_code) %>%                  
+  filter(n()>1) %>%                  
+  ungroup()
+```
+
+Apparently there are 17 duplicate MRT Exits, so I will remove the duplicated records and keep the first occurrence. So, in total there are 556 MRT Exits.
+
+```{r}
+MRT_exit_sf<- MRT_exit_sf %>%
+  distinct(stn_name, exit_code, .keep_all=TRUE)
+```
+
+Next, I will count the number of MRT Exits in each hexagonal grid.
+
+```{r}
+honeycomb_with_busstop$'MRT_EXIT_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, MRT_exit_sf))
+```
+
+Next, I will check the distribution of MRT Exits.
+
+```{r}
+summary(honeycomb_with_busstop$'MRT_EXIT_COUNT')
 ```
 
 ```{r}
-summary(honeycomb_grid_sf$'MRT_EXIT_COUNT')
+tmap_options(check.and.fix = TRUE)     
+tmap_mode("view")     
+tm_shape(mpsz)+      
+  tm_polygons(alpha=0.3)+          
+  tm_shape(honeycomb_with_busstop%>%                                           filter(MRT_EXIT_COUNT>0)) +       
+  tm_borders() +            
+  tm_fill("MRT_EXIT_COUNT",                                  
+          palette = "Blues",                                            
+          title = "MRT Exit Count",                                            breaks= c(1,4,7,10,13),                                            
+          legend.show = TRUE,                                            
+          alpha=0.7) +            
+  tm_view(set.zoom.limits =c(11,14))+            
+  tm_layout(main.title = 'MRT Exits Count on Hexagonal Grid' ,   
+            main.title.position = "center",                                       
+            main.title.size = 1.0,                                              
+            main.title.fontface = 'bold',                                         
+            legend.width=1)    
+tmap_mode("plot") 
 ```
 
-```{r}
-tmap_mode("plot")
-tmap_options(check.and.fix = TRUE) 
-tm_shape(mpsz)+
-  tm_polygons()+
-tm_shape(honeycomb_grid_sf %>% 
-           filter(MRT_EXIT_COUNT>0)) +      
-  tm_polygons(col="MRT_EXIT_COUNT", alpha=0.6, breaks=c(1,4,7,10,13)) +    
-  #tm_view(set.zoom.limits =c(11,14))  
-tmap_mode("plot")
-```
+From the map above, it is observed that Downtown area exhibits a higher concentration of MRT Exits with a maximum of 13.
 
 ## Flow_Data_Tidy
 
-## 
+In this section, I will append all propulsive(origin) and attraction(destination) variables to my flow_data1 and create new df flow_data_tidy.
+
+First, I will convert grid_id of honeycomb_with_busstop to factor format to match with the "grid_id" of flow_data1
+
+```{r}
+honeycomb_with_busstop$grid_id <- as.factor(honeycomb_with_busstop$grid_id)
+```
+
+I will tidy up flow_data1.
+
+```{r}
+flow_data1 <- flow_data1 %>%
+  select(c("ORIGIN_GRID_ID","ORIGIN_DESC","DESTIN_GRID_ID","DESTIN_DESC",
+           "MORNING_PEAK", "dist"))
+```
+
+```{r}
+flow_data_tidy <- flow_data1 %>%
+  left_join(honeycomb_with_busstop,
+            by = c('ORIGIN_GRID_ID' = 'grid_id')) %>%
+  rename(ORIGIN_SCHOOL_COUNT=SCHOOL_COUNT,
+         ORIGIN_HDB_DWELLING_UNIT=HDB_DWELLING_UNIT,
+         ORIGIN_BUSINESS_COUNT=BUSINESS_COUNT,
+         ORIGIN_ENTERTAINMENT_COUNT=ENTERTAINMENT_COUNT,
+         ORIGIN_FNB_COUNT=FNB_COUNT,
+         ORIGIN_FINSERV_COUNT=FINSERV_COUNT,
+         ORIGIN_LEIREC_COUNT=LEIREC_COUNT,
+         ORIGIN_RETAILS_COUNT=RETAILS_COUNT,
+         ORIGIN_MRT_EXIT_COUNT=MRT_EXIT_COUNT)%>%
+  select(-c(busstop_count,area_honeycomb_grid))
+
+flow_data_tidy <- flow_data_tidy %>%
+  left_join(honeycomb_with_busstop,
+            by = c('DESTIN_GRID_ID' = 'grid_id')) %>%
+  rename(DESTIN_SCHOOL_COUNT=SCHOOL_COUNT,
+         DESTIN_HDB_DWELLING_UNIT=HDB_DWELLING_UNIT,
+         DESTIN_BUSINESS_COUNT=BUSINESS_COUNT,
+         DESTIN_ENTERTAINMENT_COUNT=ENTERTAINMENT_COUNT,
+         DESTIN_FNB_COUNT=FNB_COUNT,
+         DESTIN_FINSERV_COUNT=FINSERV_COUNT,
+         DESTIN_LEIREC_COUNT=LEIREC_COUNT,
+         DESTIN_RETAILS_COUNT=RETAILS_COUNT,
+         DESTIN_MRT_EXIT_COUNT=MRT_EXIT_COUNT)%>%
+  select(-c(busstop_count,area_honeycomb_grid))
+
+```
+
+I will write `flow_data_tidy` into local disk.
+
+```{r}
+write_rds(flow_data_tidy,"data/rds/flow_data_tidy.rds")
+```
+
+Read the flow_data_tidy back into R
+
+```{r}
+flow_data_tidy <- read_rds("data/rds/flow_data_tidy.rds")
+```
+
+## Calibrating Spatial Interaction Models
+
+Data Exploration on Flow_data
+
+Distribution of trips
+
+Trips vs distance
+
+log(trips) vs log(dist)
+
+### Poisson Regression
 
 ## Reference
 
