@@ -92,15 +92,15 @@ Before I get started, I need to ensure that **sf**, **spdep**, **tmap**, **tidyv
 
 -   knitr: for facilitating dynamic report generation in R Markdown documents.
 
--   sp:???
+-   sp: for handling spatial data in R
 
--   reshape2
+-   reshape2: to reshape data frames in R, inclusing melt or cast for transforming data between wide and long format
 
--   stplanr
+-   stplanr: for analysing and visualizing transportation data
 
--   httr
+-   httr: for making HTTP requests in T inclluding interacting with web APIs.
 
--   performance
+-   performance: for comparing the performance of the models
 
 The code chunk below is used to ensure that the necessary R packages have been installed , if it is yet to be installed, it will then be installed and ready to be used in the R environment.
 
@@ -114,11 +114,12 @@ pacman::p_load(sf, spdep, tmap, tidyverse, knitr, sp, reshape2, stplanr, httr, p
 
 ### **Importing OD Csv File into R Environment**
 
-Next, I will import *Passenger Volume by Origin Destination Bus Stops* data set: *origin_destination_bus_202310.csv downloaded from LTA Datamall for October 2023* into R by using [*`st_read()`*](#0){style="font-size: 11pt;"} of **readr** package. The output is R dataframe class.
+Next, I will import *Passenger Volume by Origin Destination Bus Stops* data set: *origin_destination_bus_202310.csv downloaded from LTA Datamall for October 2023* into R by using [*`st_read()`*](#0){style="font-size: 11pt;"} of **readr** package. The output is R dataframe class. In total, there are 5,694,297 records with 7 columns.
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
+#| eval: false
 odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
 ```
 
@@ -127,6 +128,7 @@ The code chunk below uses [*`glimpse()`*](https://www.rdocumentation.org/package
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"
+#| eval: false
 glimpse(odbus)
 ```
 
@@ -134,7 +136,8 @@ From the glimpse() check above, it is shown that the ORIGIN_PT_CODE and DESTINAT
 
 ```{r}
 #| code-fold: true  
-#| #| #| code-summary: "Show the code"  
+#| code-summary: "Show the code"
+#| eval: false  
 odbus$ORIGIN_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
 odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE) 
 ```
@@ -144,6 +147,7 @@ Next, I will confirm the data type changes using glimpse().
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
+#| eval: false 
 glimpse(odbus)
 ```
 
@@ -153,21 +157,22 @@ glimpse(odbus)
 #| code-fold: true 
 #| #| code-summary: "Show the code" 
 #| eval: false
-#duplicate_rec <- odbus %>%   
-#  group_by_all() %>%   
-#  filter(n()>1) %>%   
-#  ungroup()
+duplicate_rec <- odbus %>%   
+  group_by_all() %>%   
+  filter(n()>1) %>%   
+  ungroup()
 ```
 
 There is no duplicate record found on odbus dataset.
 
 ### Extracting the Study Data
 
-For the purpose of this take-home exercise, I will extract commuting flows on Weekend/holiday morning peak which is between 11am to 2pm.
+For the purpose of this take-home exercise, I will extract commuting flows on Weekend/holiday morning peak which is between 11am to 2pm. In total, there are 222,154 records with origin and destination pair for Weekends/Holiday Morning Peak Hour.
 
 ```{r}
 #| code-fold: true   
-#| #| code-summary: "Show the code"
+#| code-summary: "Show the code"
+#| eval: false 
 odbus11_14 <- odbus %>%      
   filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%      
   filter(TIME_PER_HOUR >= 11 & TIME_PER_HOUR <= 14) %>%
@@ -176,6 +181,9 @@ odbus11_14 <- odbus %>%
 ```
 
 ```{r}
+#| code-fold: true   
+#| code-summary: "Show the code"
+#| eval: false 
 glimpse(odbus11_14)
 ```
 
@@ -185,11 +193,12 @@ glimpse(odbus11_14)
 
 -   Bus Stop Location
 
-The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import BusStop shapefile into R. The imported shapefile will be **simple features** Object of **sf**. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21 (projected coordinate system for Singapore).
+The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package to import BusStop shapefile into R. The imported shapefile will be **simple features** Object of **sf**. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21 (projected coordinate system for Singapore). There are 5,161 point coordinates of bus stops.
 
 ```{r}
 #| code-fold: true 
-#| code-summary: "Show the code" 
+#| code-summary: "Show the code"
+#| eval: false 
 busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
   st_transform(crs = 3414)
 ```
@@ -198,17 +207,19 @@ busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
 
 ```{r}
 #| code-fold: true 
-#| #| code-summary: "Show the code" 
+#| code-summary: "Show the code"
+#| eval: false 
 duplicate_bus_stop <- busstop %>%   
   group_by(BUS_STOP_N) %>%   
   filter(n()>1)
 ```
 
-There are 16 duplicated records with same BUS_STOP_N but different geometry points. However, upon investigation, the coordinates are quite near to each other, this lead to the possibility of temporary bus stop. In view of this, I will remove the duplicated records and only keep the first occurrence using the code chunk below
+There are 32 duplicated records with same BUS_STOP_N but different geometry points. However, upon investigation, the coordinates are quite near to each other, this lead to the possibility of being a temporary bus stop. In view of this, I will remove the duplicated records and only keep the first occurrence using the code chunk below. In total, now there are 5,145 point coordinates.
 
 ```{r}
 #| code-fold: true 
-#| #| code-summary: "Show the code" 
+#| code-summary: "Show the code"
+#| eval: false 
 busstop <- busstop %>%   
   distinct(BUS_STOP_N, .keep_all =TRUE)
 ```
@@ -219,7 +230,8 @@ The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/refere
 
 ```{r}
 #| code-fold: true 
-#| code-summary: "Show the code" 
+#| code-summary: "Show the code"
+#| eval: false  
 mpsz <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
   st_transform(crs = 3414)
 ```
@@ -233,18 +245,24 @@ The code chunk below uses [*`st_make_grid`*](https://r-spatial.github.io/sf/refe
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
+#| eval: false 
 area_honeycomb_grid = st_make_grid(busstop, cellsize=750, what = "polygons", square = FALSE)      
 # To sf and add grid ID    
-honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
+c = st_sf(area_honeycomb_grid) %>%
   # add grid ID            
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 ```
 
-Next, I will only retain the hexagons with at least 1 bus stop in it.
+Next, I will change the data type of grid_id to factor and will only retain the hexagons with at least 1 bus stop in it.
 
 ```{r}
-honeycomb_grid_sf$busstop_count = lengths(st_intersects(honeycomb_grid_sf, busstop))
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 
+honeycomb_grid_sf$grid_id <- as.factor(honeycomb_grid_sf$grid_id)
+
+honeycomb_grid_sf$busstop_count = lengths(st_intersects(honeycomb_grid_sf, busstop))
 
 honeycomb_with_busstop = filter(honeycomb_grid_sf, busstop_count > 0)
 ```
@@ -252,17 +270,46 @@ honeycomb_with_busstop = filter(honeycomb_grid_sf, busstop_count > 0)
 There are 834 hexagonal units with at least 1 busstop.
 
 ```{r}
-plot(honeycomb_with_busstop['busstop_count'], 
-     main = 'Bus Stop Count in Each Hexagonal Grid')
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
+summary(honeycomb_with_busstop$busstop_count)
 ```
 
-Some hexagonal grids are highly packed with a maximum of 19 bus stops shown in yellow color above.
+```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
+tmap_options(check.and.fix = TRUE) 
+tmap_mode("view") 
+tm_shape(mpsz)+   
+  tm_polygons(alpha=0.3)+
+tm_shape(honeycomb_with_busstop%>% filter(busstop_count>0)) +
+  tm_borders() +
+  tm_fill("busstop_count", palette = "Blues",
+          title = "Bus Stop Count",
+          breaks= c(1,5,10,15,19),
+          legend.show = TRUE,
+          alpha=0.7) +
+  tm_view(set.zoom.limits =c(11,17))+
+  tm_layout(main.title = 'Bus Stop on Hexagonal Grid' ,
+            main.title.position = "center",
+            main.title.size = 1.0,
+            main.title.fontface = 'bold',
+            legend.width=1)
+tmap_mode("plot") 
+```
+
+Some hexagonal grids are highly packed with a maximum of 19 bus stops shown in dark blue color above like Bukit Panjang, Downtown Area and Sembawang.
 
 ### Data Wrangling with Geospatial Data
 
 In this section, I uses [`st_intersection()`](https://r-spatial.github.io/sf/reference/geos_binary_ops.html#arguments) from **sp** package to overlap the bus stop points and hexagonal grids.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 busstop_honeycomb <- st_intersection(busstop, honeycomb_with_busstop) %>%
   select(BUS_STOP_N, LOC_DESC, grid_id) %>%
   st_drop_geometry()
@@ -275,6 +322,9 @@ In this section, I will construct a matrix for Origin and Destination with the T
 First, I will append "ORIGIN_GRID_ID" and "ORIGIN_LOC_DESC" from busstop_honeycomb data frame onto odbus11_14 data frame using the code chunk below.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 od_data <- left_join(odbus11_14 , busstop_honeycomb,
             by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
   rename(ORIGIN_BS = ORIGIN_PT_CODE,
@@ -286,8 +336,9 @@ od_data <- left_join(odbus11_14 , busstop_honeycomb,
 Next, I will check for duplicated records on od_data using the chunk code below.
 
 ```{r}
-#| code-fold: true 
-#| #| code-summary: "Show the code" 
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 duplicate_od_data <- od_data %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
@@ -299,6 +350,9 @@ The above code chunk shows that there are no duplicate record found.
 Next, I will update od_data data frame by performing another left join with busstop_honeycomb to get the "DESTIN_GRID_ID" and "DESTIN_LOC_DESC".
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 od_data <- left_join(od_data , busstop_honeycomb,
             by = c("DESTIN_BS" = "BUS_STOP_N")) %>%
   rename(DESTIN_GRID_ID = grid_id,
@@ -306,6 +360,9 @@ od_data <- left_join(od_data , busstop_honeycomb,
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 missing_values <- colSums(is.na(od_data))
 
 # Print the columns with missing values
@@ -314,34 +371,47 @@ print(missing_values)
 
 The missing grid_id for origin and destination bus stop may be due to the outdated Bus Stop Location Data which is uploaded on July 2023 as compared to the Passenger Volume by Origin Destination Bus Stops data collected in October 2023.
 
-So, I will remove the rows with NA and calculate the number of trips on weekends/holiday morning peak hour by using the group_by "ORIGIN_GRID_ID" and "DESTIN_GRID_ID" and sum all the trips between each combination of hexagonal grid ids using the code chunk below.
+So, I will remove the rows with NA (in total, now there are 216,644 records) and calculate the number of trips on weekends/holiday morning peak hour by using the group_by "ORIGIN_GRID_ID" and "DESTIN_GRID_ID" and sum all the trips between each combination of hexagonal grid ids using the code chunk below.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 od_data <- od_data %>%
   drop_na()
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 od_data1 <- od_data %>%
   group_by(ORIGIN_GRID_ID, DESTIN_GRID_ID) %>%
-  summarise(MORNING_PEAK = sum(TRIPS),
-            ORIGIN_DESC = paste(unique(ORIGIN_LOC_DESC), collapse = ', '),
-            DESTIN_DESC = paste(unique(DESTIN_LOC_DESC), collapse = ', '))
+  summarise(MORNING_PEAK = sum(TRIPS))
 ```
 
 I will check the distribution of the Morning Peak trips using summary as shown below.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 summary(od_data1$MORNING_PEAK)
 ```
 
 I will save the output into an rds file format.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 write_rds(od_data, "data/rds/od_data.rds")
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 od_data <- read_rds("data/rds/od_data.rds")
 ```
 
@@ -350,6 +420,9 @@ od_data <- read_rds("data/rds/od_data.rds")
 First [`as.Spatial()`](https://r-spatial.github.io/sf/reference/coerce-methods.html) from **sp** package will be used to convert honeycomb_with_busstop from sf tibble data frame to SpatialPolygonsDataFrame of sp object as shown in the code chunk below. This method is used because it is faster to compute distance matrix using sp than sf package.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 honeycomb_with_busstop_sp <- as(honeycomb_with_busstop, "Spatial") 
 honeycomb_with_busstop_sp
 ```
@@ -357,6 +430,9 @@ honeycomb_with_busstop_sp
 Next, [`spDists()`](https://www.rdocumentation.org/packages/sp/versions/2.1-1/topics/spDistsN1) of **sp** package will be used to compute the Euclidean distance between the centroids of the hexagons. When longlat is set to FALSE, spDists will return a full matrix of distances in the metric of points. While longlat is set to TRUE, it will return in kilometers. In my case, since there are 834 hexagon, amtrix of 834 x 834 will be created and I will print out the first 8 rows using head().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 dist <- spDists(honeycomb_with_busstop_sp, 
                 longlat = FALSE)
 head(dist, n=c(8, 8))
@@ -365,6 +441,9 @@ head(dist, n=c(8, 8))
 From the matrix above, it is noticed that both the column and row headers are not labelled by grid_id. So, I label the headers by first creating a list sorted according to the distance matrix by grid_id and followed by attaching the grid_id to row and column for distance matrix matching.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 grid_id_desc <- honeycomb_with_busstop$grid_id
 
 colnames(dist) <- paste0(grid_id_desc)
@@ -372,13 +451,16 @@ rownames(dist) <- paste0(grid_id_desc)
 head(dist, n=c(8,8))
 ```
 
-Next, I will pivot the distance matrix into a long table by using the row and column grid_id using melt() of reshape2 package to convert wide-format data to long-format data.
+Next, I will pivot the distance matrix into a long table by using the row and column grid_id using **`melt()`** of **reshape2** package to convert wide-format data to long-format data.
 
 For reference : <https://www.statology.org/long-vs-wide-data/>
 
 ![Wide Long Format](figure/wide_long_data.png)
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 distPair <- melt(dist) %>%
   rename(dist = value)
 head(distPair, 10)
@@ -387,31 +469,23 @@ head(distPair, 10)
 There are 695556 rows of distPair as the number of possible pair of hexagon permutations.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 summary(distPair$dist)
 ```
 
-From the summary of "dist" above, it is noticed that there are 0 distance, this refer to intra-zonal distance meaning that the trips are taken from same grid id. Since my minimum inter-zonal distance is 750m, it will set my intra-zonal distance to value below 750/2 = 375m. So, I choose a value of 350m for intra-zonal distance.
-
-```{r}
-distPair %>%
-  filter(dist > 0) %>%
-  summary()
-```
-
-```{r}
-distPair$dist <- ifelse(distPair$dist == 0, 350, distPair$dist)
-```
+From the summary of "dist" above, it is noticed that there are 0 distance, this refer to intra-zonal distance meaning that the trips are taken on the same grid id.
 
 Next, I will rename var1 and var 2 into origin and destination grid_id.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 distPair <- distPair %>%
   rename(ORIGIN_GRID_ID = Var1,
          DESTIN_GRID_ID = Var2)
-```
-
-```{r}
-summary(distPair$dist)
 ```
 
 ## **Preparing Flow Data**
@@ -419,51 +493,66 @@ summary(distPair$dist)
 In this section, I will rename my od_data1 to flow_data.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 flow_data <- od_data1
 
 print(head(flow_data))
 ```
 
-### **Separating Intra-Flow from flow_data Data Frame**
+### **Separating Intra-Flow and Inter-Flow**
 
-The code chunk below is used to add two new fields in `flow_data` dataframe.
+The code chunk below is used to add a new field in `flow_data` dataframe.
 
--   'FlowNoIntra' : 0 for intra-zonal flow and MORNING_PEAK for inter-zonal flow
-
--   'offset' : a very small number (i.e. 0.000001) for intra-zonal flow and 1 for inter-zonal flow
+-   'isinter' : 0 for intra-zonal flow and MORNING_PEAK for inter-zonal flow
 
 ```{r}
-flow_data$FlowNoIntra <- ifelse(
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
+flow_data$isinter <- ifelse(
   flow_data$ORIGIN_GRID_ID == flow_data$DESTIN_GRID_ID, 
   0, flow_data$MORNING_PEAK)
-flow_data$offset <- ifelse(
-  flow_data$ORIGIN_GRID_ID == flow_data$DESTIN_GRID_ID, 
-  0.000001, 1)
 ```
 
 I will create 2 separate data frames for intra and inter zonal flow.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 intra_zonal_flow <- flow_data %>% 
-  filter(FlowNoIntra ==0)
+  filter(isinter ==0)
 
 inter_zonal_flow <- flow_data %>% 
-  filter(FlowNoIntra >0)
+  filter(isinter >0)
 ```
 
 From a total of 62176 flow data, there are 568 intra-zonal flow and 61,608 inter-zonal flow.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 intra_zonal_flow
+```
+
+```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
+inter_zonal_flow
 ```
 
 ### **Combining Passenger Volume Data (Inter-Zonal Flow Data) with Distance Value**
 
-Before we can join "*inter_zonal_flow*" and "*distPair"*, I will convert data value type of *ORIGIN_GRID_ID* and *DESTIN_GRID_ID* fields of both dataframe into factor data type.
+Before we can join "*inter_zonal_flow*" and "*distPair"*, I will convert data value type of *ORIGIN_GRID_ID* and *DESTIN_GRID_ID* fields of distPair into factor data type.
 
 ```{r}
-inter_zonal_flow$ORIGIN_GRID_ID <- as.factor(inter_zonal_flow$ORIGIN_GRID_ID) 
-inter_zonal_flow$DESTIN_GRID_ID  <- as.factor(inter_zonal_flow$DESTIN_GRID_ID)
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 distPair$ORIGIN_GRID_ID  <- as.factor(distPair$ORIGIN_GRID_ID)
 distPair$DESTIN_GRID_ID  <- as.factor(distPair$DESTIN_GRID_ID )
 ```
@@ -471,6 +560,9 @@ distPair$DESTIN_GRID_ID  <- as.factor(distPair$DESTIN_GRID_ID )
 Now, `left_join()` of **dplyr** will be used to combine "*inter_zonal_flow"* dataframe and *distPair* dataframe. The output is called *flow_data1*.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 flow_data1 <- inter_zonal_flow %>%
   left_join (distPair,
              by = c("ORIGIN_GRID_ID" = "ORIGIN_GRID_ID",
@@ -483,17 +575,23 @@ print(head(flow_data1))
 In this section, I will create a desire line of inter-zonal flow (flow_data1) by using `od2line` of **stplanr** package.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 flowLine <- od2line(flow = flow_data1, zones = honeycomb_with_busstop, zone_code = "grid_id") 
 ```
 
-To visualise the resulting desire lines, the code chunk below is used. In the map below, I have filtered out the trips of less than 5000 for ease of analysis. Thicker line width refers to the flow with more trips while the length of the desire lines refers to the distance of each inter-zonal flow.
+To visualise the resulting desire lines, the code chunk below is used. In the map below, I have filtered out the trips of less than 5000 for my analysis. Thicker line width refers to the flow with more trips while the length of the desire lines refers to the distance of each inter-zonal flow.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("plot") 
 tm_shape(mpsz)+   
   tm_polygons(alpha=0.5)+
-  tm_text(text = "SUBZONE_N", size = 0.2) +
+  #tm_text(text = "SUBZONE_N", size = 0.2) +
 tm_shape(honeycomb_with_busstop) +
   tm_polygons(col = "lightblue", alpha=0.5) +    
   flowLine %>%   filter(MORNING_PEAK >= 5000) %>%   
@@ -513,28 +611,37 @@ tm_shape(honeycomb_with_busstop) +
 From the map above, I observed a noticeable concentration of public bus flow in the Woodlands Area and Johor Bahru (hexagon outside of Singapore boundary) as indicated by a thick bank extending between the two for weekends/holiday morning peak hour. We will further analyse whether the flow is from Singapore or from Johor Bahru.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 flowLine %>% filter(MORNING_PEAK >= 30000)
 ```
 
 The public bus flow suggest that the predominant movement is from Woodlands Checkpoint to Johor Bahru Checkpoint with around 43k trips. The flow from Johor Bahru Checkpoint to Singapore is also comparably high with around 31k trips. This public bus commuter flow could be attributed to individuals engaging in leisure activities, entertainment, tourism, family/friend visit in Johor/Singapore, some even take advantage of cost-effective grocery shopping in Johor.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 summary((flowLine %>% filter(MORNING_PEAK >= 5000))$dist)
 ```
 
-Furthermore, I observed that during weekend morning, the predominant public bus flow spans a relatively short distance with a maximum of 2.7 kilometers. This phenomenon may be attributed to the fact that weekends are typically considered rest days, leading to shorter commutes or more localized activities within a confined radius. Alternatively, individuals may opt for different modes of transport like MRT longer transfers. In the view of activities in confined redius, I will also analyse intra-zonal flows.
+Furthermore, I observed that during weekend morning, the predominant public bus flow spans a relatively short distance with a maximum of 2.7 kilometers. This phenomenon may be attributed to the fact that weekends are typically considered rest days, leading to shorter commutes or more localized activities within a confined radius. Alternatively, individuals may opt for different modes of transport like MRT longer transfers. In the view of activities in confined radius, I will also analyse intra-zonal flows.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 intra_flow_map <- honeycomb_with_busstop %>%
   inner_join(intra_zonal_flow, by = c("grid_id" = "ORIGIN_GRID_ID")) %>%
-  rename("LOC_DESC"="ORIGIN_DESC") %>%
-  select("grid_id","LOC_DESC","MORNING_PEAK","busstop_count","area_honeycomb_grid")
+  select("grid_id","MORNING_PEAK","busstop_count","area_honeycomb_grid")
 
-intra_flow_map <- intra_flow_map %>%
-  mutate(short_loc_desc = str_extract(LOC_DESC, "^[^,]+"))
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -545,8 +652,7 @@ tm_shape(intra_flow_map) +
           title = "Morning Peak",
           breaks= c(1,1000,5000,8000,11000,14500),
           legend.show = TRUE,
-          popup.vars = c("Location Description" ="short_loc_desc",
-                         "Trips Count"="MORNING_PEAK",
+          popup.vars = c("Trips Count"="MORNING_PEAK",
                          "Bus Stop Count"="busstop_count"
                          )) +
   tm_view(set.zoom.limits =c(11,17))+
@@ -558,11 +664,14 @@ tm_shape(intra_flow_map) +
 tmap_mode("plot") 
 ```
 
-From the map above, the intra public bus flow occurs in the vicinity of Admiralty Int, BLK 126 CP (Bukit Merah and Tiong Bahru Area). This suggested that there is a significant volume occuring within a short distance in the specified areas.
+From the map above, the intra public bus flow occurs in the vicinity of Admiralty Int, and along Bukit Merah and Tiong Bahru Area. This suggested that there is a significant volume occurring within a short distance in the specified areas.
 
 The below code chunk is for the interactive maps to get more insights.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -577,9 +686,7 @@ tm_shape(honeycomb_with_busstop) +
            n = 6,                        
            alpha = 0.3,
            col="red",
-           popup.vars=c("Origin Description"="ORIGIN_DESC",
-                        "Destination Description" ="DESTIN_DESC",
-                        "Trips Count" ="MORNING_PEAK"))+   
+           popup.vars=c("Trips Count" ="MORNING_PEAK"))+   
   tm_view(set.zoom.limits =c(11,17))+
   tm_layout(main.title = 'Static Map: OD Flow On Weekends/Holiday Morning Peak Hour' ,
             main.title.position = "center",
@@ -587,7 +694,7 @@ tm_shape(honeycomb_with_busstop) +
             main.title.fontface = 'bold')
 ```
 
-From the map above, I also noticed that there are some great volume to hexagonal grid with bus interchanges or MRt/LRT stations such as Boonlay, Choa Chu Kang, Bukit Panjang, Yee Tew, Clementi, Bishan, Ang Mo Kio, Serangoon, Toa Payoh, Sengkang, Bedok, Tampines, Pasir Ris, which can be one of the factor to be considered for my Spatial Interaction Model later on.
+From the map above, I also noticed that there are some great volume to hexagonal grid with bus interchanges or MRT/LRT stations such as Boonlay, Choa Chu Kang, Bukit Panjang, Yee Tew, Clementi, Bishan, Ang Mo Kio, Serangoon, Toa Payoh, Sengkang, Bedok, Tampines, Pasir Ris, which can be one of the factor to be considered for my Spatial Interaction Model later on.
 
 ## Assemble Propulsive(Origin) and Attractiveness(Destination) Variables for Spatial Interaction Model
 
@@ -596,6 +703,9 @@ From the map above, I also noticed that there are some great volume to hexagonal
 First, I will import the School General Information in csv format which is downloaded from data.gov.sg for School Directory and Information. This dataset consist of school name and postal code for MOE Kindergartens, Primary Schools, Secondary Schools, Junior College, Mixed Levels and Centralized Institute for pre-university. In total, there are 346 records. Since the data set does not include polytechnics and ITE, I will collate the information from [moe.gov.sg](https://www.moe.gov.sg/schoolfinder?journey=MOE%20Kindergarten). Currently, there are 8 polytechnics/ITE. Next, I will merge the 2 dasasets and so in total there are 354 schools.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 school <- read_csv("data/aspatial/Generalinformationofschools.csv")
 poly_ite <- read_csv("data/aspatial/poly_ite.csv")
 
@@ -609,7 +719,9 @@ merged_school <- bind_rows(school, poly_ite)
 Next, I will use OneMap API to geocode the school locations by retriving the longitude and latitude coordinates using the postal_code field.
 
 ```{r}
-#|eval: false
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 url <- "https://www.onemap.gov.sg/api/common/elastic/search"
 
 postcodes <- merged_school$'postal_code'
@@ -633,6 +745,9 @@ merged = merge(merged_school, found, by.x='postal_code', by.y='results.POSTAL', 
 It is noticed that the number of rows are increasing, there may be duplicated rows and upon checking, there are 8 duplicated rows so I will remove the duplicated rows.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 duplicate_school <- merged %>%
   group_by_all() %>%
   filter(n()>1) %>%
@@ -640,6 +755,9 @@ duplicate_school <- merged %>%
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 merged <- merged %>%
   distinct(across(everything()), .keep_all = TRUE)
 ```
@@ -647,12 +765,18 @@ merged <- merged %>%
 Then , I will check wehther there is any postal code that cannot be geocode using the code chunk below.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 not_found
 ```
 
 There is 1 postal code that cannot be geocode which is 677741. In this case, I will manually extract the longitude (103.7651) and latitude(1.389279) for this specific postal code and fill the NA values with the code chunk below
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 merged <- merged %>%
   mutate(results.LATITUDE = ifelse(postal_code == "677741", 1.389279, results.LATITUDE)) %>%
   mutate(results.LONGITUDE = ifelse(postal_code == "677741", 103.7651, results.LONGITUDE))
@@ -661,6 +785,9 @@ merged <- merged %>%
 I will then write the merged file into a csv file.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 write.csv (merged, file='data/aspatial/schools.csv')
 write.csv (not_found, file ='data/aspatial/not_found.csv')
 ```
@@ -668,6 +795,9 @@ write.csv (not_found, file ='data/aspatial/not_found.csv')
 Next, I will import the schools final data set and tidy it up (i.e. renaming the column headers) and only extract necessary fields using the code chunk below.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 schools <- read_csv("data/aspatial/schools.csv") %>%
   rename(latitude='results.LATITUDE', longitude='results.LONGITUDE')%>%
   select(postal_code, school_name, latitude,longitude)
@@ -676,6 +806,9 @@ schools <- read_csv("data/aspatial/schools.csv") %>%
 Then, I will convert the school coordinates into Singapore Projected Coordinate System SVY21 after converting to sf object.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 schools_sf <- st_as_sf(schools, 
                        coords=c('longitude', 'latitude'),
                        crs=4326) %>%
@@ -685,16 +818,25 @@ schools_sf <- st_as_sf(schools,
 After that, I will count the number of schools in each heaxgon using the **`st_intersects()`** of **sp** package.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'SCHOOL_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, schools_sf))
 ```
 
 Next, I will check the school_count distributions using summary().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$SCHOOL_COUNT)
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -722,12 +864,18 @@ From the above map, it is noticeable that schools are spread across Singapore an
 I will import the hdb in csv format provided and collated by Prof. Kam. This data set is the geocoded version of *HDB Property Information* data from [Data.gov.sg](https://beta.data.gov.sg/). The data set is prepared using September 2021 data, consisting of 12,442 records with 37 columns.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 hdb <- read_csv("data/aspatial/hdb.csv")
 ```
 
 Next, I will convert the longitude and latitude from WSG84 to Singapore Projected Coordinate System SVY21 using **`st_transform()`**.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 hdb_sf <- st_as_sf(hdb,                         
                        coords=c('lng', 'lat'),                        
                        crs=4326) %>%   
@@ -737,6 +885,9 @@ hdb_sf <- st_as_sf(hdb,
 Next, I will check for duplicated hdb.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 duplicate_hdb <- hdb_sf %>%   
   group_by(blk_no,street) %>%   
   filter(n()>1) %>%   
@@ -746,6 +897,9 @@ duplicate_hdb <- hdb_sf %>%
 There are no duplicated hdb, so next, I will count the dwelling units in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 dwelling_units_count <- st_intersection(honeycomb_with_busstop, hdb_sf) %>%
   group_by(grid_id) %>%
   summarise(HDB_DWELLING_UNIT=sum(total_dwelling_units)) %>%
@@ -753,23 +907,35 @@ dwelling_units_count <- st_intersection(honeycomb_with_busstop, hdb_sf) %>%
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop = left_join(honeycomb_with_busstop, dwelling_units_count)
 ```
 
 Next, I will check the distribution of dwelling units in Singapore.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$HDB_DWELLING_UNIT)
 ```
 
 Next, I will NA with 0, meaning there is the hexagonal grid is not a residential area.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop <- honeycomb_with_busstop %>%
   mutate(HDB_DWELLING_UNIT = replace_na(HDB_DWELLING_UNIT, 0))
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -797,14 +963,18 @@ From the map above, the HDB spread across Singapore with high concentration on P
 This business data is curated by Prof. Kam, consisting locations of business establishments in Singapore. It consists of 6,550 point coordinates of business location in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 business_sf <- st_read(dsn="data/geospatial", layer="Business")
 ```
 
 Next, I will check for duplicated business.
 
 ```{r}
-#| code-fold: true 
-#| #| code-summary: "Show the code" 
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 duplicate_business <- business_sf %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
@@ -814,12 +984,18 @@ duplicate_business <- business_sf %>%
 Apparently there are 2 duplicate businesses, so I will remove the duplicated records and keep the first occurrence.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 business_sf<- unique(business_sf)
 ```
 
 Next, I will count the number of businesses in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'BUSINESS_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, business_sf))
 
 ```
@@ -827,10 +1003,16 @@ honeycomb_with_busstop$'BUSINESS_COUNT' <- lengths(st_intersects(honeycomb_with_
 Next, I will check the distribution of BUSINESS_COUNT.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$'BUSINESS_COUNT')
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -858,14 +1040,18 @@ From the map above, for business, it is observed that certain regions especially
 This entertainment data is curated by Prof. Kam, consisting of 114 point coordinates of entertainment area like cinema, theatre, art centers in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 entertainment_sf <- st_read(dsn="data/geospatial", layer="entertn")
 ```
 
 Next, I will check for duplicated entertainment.
 
 ```{r}
-#| code-fold: true 
-#| #| code-summary: "Show the code" 
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 duplicate_entertn <- entertainment_sf %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
@@ -874,21 +1060,35 @@ duplicate_entertn <- entertainment_sf %>%
 
 Apparently there are 2 duplicate entertainments, so I will remove the duplicated records and keep the first occurrence.
 
-`{r} entertainment_sf<- unique(entertainment_sf)}`
+```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
+entertainment_sf<- unique(entertainment_sf)
+```
 
 Next, I will count the number of entertainments in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'ENTERTAINMENT_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, entertainment_sf))
 ```
 
 Next, I will check the distribution of ENTERTAINMENT_COUNT.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$'ENTERTAINMENT_COUNT')
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -916,6 +1116,9 @@ From the map above, it is observed that CBD area especially city hall to bugis a
 This F&B data is curated by Prof. Kam, consisting of 1,919 point coordinates of F&B area like cafe, restaurant, bar, club, karaoke, pub in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 fnb_sf <- st_read(dsn="data/geospatial", layer="F&B")
 ```
 
@@ -924,6 +1127,7 @@ Next, I will check for duplicated F&B.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
+#| eval: false  
 duplicate_fnb <- fnb_sf %>%      
   group_by_all() %>%      
   filter(n()>1) %>%      
@@ -933,16 +1137,25 @@ duplicate_fnb <- fnb_sf %>%
 There are no duplicated F&B so next, I will count the number of F&B in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'FNB_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, fnb_sf))
 ```
 
 Next, I will check the distribution of FNB_COUNT.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$'FNB_COUNT')
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE)  
 tmap_mode("view")  
 tm_shape(mpsz)+      
@@ -972,14 +1185,18 @@ From the map above, similar to entertainment, it is observed that CBD area espec
 This Financial Service data is curated by Prof. Kam, consisting \]of 3,320 point coordinates of financial service area like bank, money changer in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 finserv_sf <- st_read(dsn="data/geospatial", layer="FinServ")
 ```
 
 Next, I will check for duplicated financial services.
 
 ```{r}
-#| code-fold: true   
-#| code-summary: "Show the code"   
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 duplicate_finserv <- finserv_sf %>%         
   group_by_all() %>%         
   filter(n()>1) %>%         
@@ -989,22 +1206,34 @@ duplicate_finserv <- finserv_sf %>%
 Apparently there are 524 duplicate financial services, so I will remove the duplicated records and keep the first occurrence. So, in total there are 3,058 financial services.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 finserv_sf<- unique(finserv_sf)
 ```
 
 Next, I will count the number of financial services in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'FINSERV_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, finserv_sf))
 ```
 
 Next, I will check the distribution of FINSERV_COUNT.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$'FINSERV_COUNT')
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE)   
 tmap_mode("view")   
 tm_shape(mpsz)+
@@ -1034,14 +1263,18 @@ From the map above, similar to f&b, it is observed that CBD area especially Tanj
 This Leisure and Recreation data is curated by Prof. Kam, consisting of 1,217 point coordinates of Leisure and Recreation area like gallery, museum, sport center, park, fitness, playground, studio in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 lei_rec_sf <- st_read(dsn="data/geospatial", layer="Liesure&Recreation")
 ```
 
 Next, I will check for duplicated Leisure and Recreation.
 
 ```{r}
-#| code-fold: true    
-#| code-summary: "Show the code"    
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false   
 duplicate_lei_rec <- lei_rec_sf %>%            
   group_by_all() %>%            
   filter(n()>1) %>%            
@@ -1051,16 +1284,25 @@ duplicate_lei_rec <- lei_rec_sf %>%
 There is no duplicated Leisure and Recreation so next, I will count the number of Leisure and Recreation in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'LEIREC_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, lei_rec_sf))
 ```
 
 Next, I will check the distribution of LEIREC_COUNT.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$'LEIREC_COUNT')
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE)    
 tmap_mode("view")    
 tm_shape(mpsz)+   
@@ -1090,14 +1332,18 @@ From the map above, it is observed that Downtown area exhibits a higher concentr
 This Retails data is curated by Prof. Kam, consisting of 37,635 point coordinates of Retails area like retail shops in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 retail_sf <- st_read(dsn="data/geospatial", layer="Retails")
 ```
 
 Next, I will check for duplicated Retails.
 
 ```{r}
-#| code-fold: true     
-#| code-summary: "Show the code"     
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false     
 duplicate_retail <- retail_sf %>%               
   group_by_all() %>%               
   filter(n()>1) %>%               
@@ -1107,22 +1353,34 @@ duplicate_retail <- retail_sf %>%
 Apparently there are 347 duplicate Retails, so I will remove the duplicated records and keep the first occurrence. So, in total there are 37,460 Retails.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 retail_sf<- unique(retail_sf)
 ```
 
 Next, I will count the number of Retails in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'RETAILS_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, retail_sf))
 ```
 
 Next, I will check the distribution of RETAILS_COUNT.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$'RETAILS_COUNT')
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE)     
 tmap_mode("view")     
 tm_shape(mpsz)+      
@@ -1145,51 +1403,14 @@ tmap_mode("plot")
 
 From the map above, it is observed that Bugis area exhibits a higher concentration of Retails in Singapore.
 
-### Geospatial Data 7 : Train Station
-
-This Train Station data is downloaded from [LTA DataMall](https://datamall.lta.gov.sg/content/datamall/en.html), consisting of 37,635 point coordinates of Retails area like retail shops in Singapore. The shapefile is already in SVY21 form so there is no need to do st_transform().
-
-```{r}
-train_station_sf <- st_read(dsn="data/geospatial", layer="RapidTransitSystemStation") %>%
-  st_transform(crs = 3414)
-```
-
-```{r}
-st_crs(train_station_sf)
-```
-
-### Exclude Depot and Facility Center from the dataset
-
-```{r}
-filtered_train_station_sf <- train_station_sf %>%
-  filter(grepl("STATION", STN_NAM_DE, ignore.case = TRUE))
-```
-
-```{r}
-honeycomb_grid_sf$'TRAIN_STATION_COUNT' <- lengths(st_intersects(honeycomb_grid_sf, filtered_train_station_sf))
-```
-
-```{r}
-summary(honeycomb_grid_sf$'TRAIN_STATION_COUNT')
-```
-
-```{r}
-tmap_mode("plot")
-tmap_options(check.and.fix = TRUE) 
-tm_shape(mpsz)+
-  tm_polygons()+
-tm_shape(honeycomb_grid_sf %>% 
-           filter(TRAIN_STATION_COUNT>0)) +      
-  tm_polygons(col="TRAIN_STATION_COUNT", alpha=0.6, breaks=c(1,3,5,6)) +    
-  #tm_view(set.zoom.limits =c(11,14))  
-tmap_mode("plot")
-```
-
-### Geospatial Data 8: MRT Station EXIT
+### Geospatial Data 7: MRT Station EXIT
 
 This MRT Station Exit data is downloaded from [LTA DataMall](https://datamall.lta.gov.sg/content/datamall/en.html), consisting of 565 point coordinates of MRT Exits in Singapore. Then, I use [*`st_transform`*](https://r-spatial.github.io/sf/reference/st_transform.html) of **sp** package to convert coordinates to EPSG code of 3414 for SVY21 (projected coordinate system for Singapore).
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 MRT_exit_sf <- st_read(dsn="data/geospatial", layer="Train_Station_Exit_Layer") %>%
   st_transform(crs = 3414)
 ```
@@ -1197,8 +1418,9 @@ MRT_exit_sf <- st_read(dsn="data/geospatial", layer="Train_Station_Exit_Layer") 
 Next, I will check for duplicated MRT Exits.
 
 ```{r}
-#| code-fold: true      
-#| code-summary: "Show the code"      
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false 
 duplicate_MRT_exit <- MRT_exit_sf %>%                  
   group_by(stn_name,exit_code) %>%                  
   filter(n()>1) %>%                  
@@ -1208,6 +1430,9 @@ duplicate_MRT_exit <- MRT_exit_sf %>%
 Apparently there are 17 duplicate MRT Exits, so I will remove the duplicated records and keep the first occurrence. So, in total there are 556 MRT Exits.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 MRT_exit_sf<- MRT_exit_sf %>%
   distinct(stn_name, exit_code, .keep_all=TRUE)
 ```
@@ -1215,16 +1440,25 @@ MRT_exit_sf<- MRT_exit_sf %>%
 Next, I will count the number of MRT Exits in each hexagonal grid.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 honeycomb_with_busstop$'MRT_EXIT_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, MRT_exit_sf))
 ```
 
 Next, I will check the distribution of MRT Exits.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 summary(honeycomb_with_busstop$'MRT_EXIT_COUNT')
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 tmap_options(check.and.fix = TRUE)     
 tmap_mode("view")     
 tm_shape(mpsz)+      
@@ -1251,21 +1485,21 @@ From the map above, it is observed that Downtown area exhibits a higher concentr
 
 In this section, I will append all propulsive(origin) and attraction(destination) variables to my flow_data1 and create new df flow_data_tidy.
 
-First, I will convert grid_id of honeycomb_with_busstop to factor format to match with the "grid_id" of flow_data1
-
-```{r}
-honeycomb_with_busstop$grid_id <- as.factor(honeycomb_with_busstop$grid_id)
-```
-
 I will tidy up flow_data1.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 flow_data1 <- flow_data1 %>%
-  select(c("ORIGIN_GRID_ID","ORIGIN_DESC","DESTIN_GRID_ID","DESTIN_DESC",
+  select(c("ORIGIN_GRID_ID","DESTIN_GRID_ID",
            "MORNING_PEAK", "dist"))
 ```
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 flow_data_tidy <- flow_data1 %>%
   left_join(honeycomb_with_busstop,
             by = c('ORIGIN_GRID_ID' = 'grid_id')) %>%
@@ -1299,16 +1533,31 @@ flow_data_tidy <- flow_data_tidy %>%
 I will write `flow_data_tidy` into local disk.
 
 ```{r}
+#| code-fold: true  
+#| code-summary: "Show the code"  
+#| eval: false
 write_rds(flow_data_tidy,"data/rds/flow_data_tidy.rds")
 ```
 
 ## Calibrating Spatial Interaction Models
 
-In this section, I will calibrate Spatial Interaction Models by using Poisson Regression method.
+In this section, I will calibrate Spatial Interaction Models by using log based Poisson Regression Gravity Model using glm() function. Ther e are 4 components in the models:
 
-Why use Poisson Regression???
+-   Number of Trips (MORNING_PEAK), as the target variable of the model
 
-What is the advantage of using it???
+-   Distance. The underlying idea is that the longer the distance, the less appealing the journey is.
+
+-   Attractiveness Variables, as factors that lead bus passengers to disembark at particular bus stop
+
+-   Propulsiveness Variables, as factors that lead bus passengers to board from particular bus stop
+
+There are several reasons why Poisson Regression is chosen as follows:
+
+-   My dependent variable , MORNING_PEAK represent count of trips making it suitable for a count-base model like Poisson Regression which is a type of generalised linear model (GLM) designed for count data
+
+-   My dependent variables only takes positive values and the concept of negative counts is not meaning, so Poisson regression is preferable over linear regression which allows for negative values.
+
+-   the choice of Poisson regression is supported by the consideration that residuals may exhibit an asymmetric distribution around the mean. In other words, outcomes on either side of the mean are not equally likely, emphasizing the need for a model that accommodates such characteristics. Therefore, Poisson regression emerges as a sensible and statistically appropriate choice for capturing the unique nature of our count-based and positively constrained MORNIGN_PEAK variable.
 
 ### Importing the Modelling Data
 
@@ -1325,7 +1574,9 @@ flow_data_tidy <- read_rds("data/rds/flow_data_tidy.rds")
 ```{r}
 ggplot(data = flow_data_tidy,
        aes(x = MORNING_PEAK)) +
-  geom_histogram()
+  geom_histogram(fill="lightblue")+
+  labs(y= "Count of Trips", x= "Trips")+
+  ggtitle("Distribution of Weekends/Holiday Morning Peak Trips")
 ```
 
 From the above plot, it is noted that the distribution of weekends/holiday morning peak hour is highly skewed to the right.
@@ -1339,7 +1590,9 @@ ggplot(data = flow_data_tidy,
        aes(x = dist,
            y = MORNING_PEAK)) +
   geom_point() +
-  geom_smooth(method = lm)
+  geom_smooth(method = lm)+
+  labs(y= 'MORNING_PEAK', x='dist') +
+  ggtitle('Relationship between MORNING_PEAK Trips and Distance')
 ```
 
 It is noticed that the relationship hardly resemble linear relationship. I will try to plot the scatter plot again using the log transformed of both variables and whether I can get a more linear relationship.
@@ -1351,10 +1604,12 @@ ggplot(data = flow_data_tidy,
        aes(x = log(dist),
            y = log(MORNING_PEAK))) +
   geom_point() +
-  geom_smooth(method = lm)
+  geom_smooth(method = lm)+
+  labs(y= 'log(MORNING_PEAK)', x='log(dist)') +
+  ggtitle('Relationship between log(MORNING_PEAK Trips) and log(Distance)')
 ```
 
-Does not resemble linear ???
+From the scatter plot above, I can see that the relationship is more resemble linear relationship.
 
 ### Checking for Variables with Zero Values
 
@@ -1394,16 +1649,28 @@ flow_data_tidy <- flow_data_tidy %>% mutate_all(~ ifelse(. == 0, 0.99, .))
 summary(flow_data_tidy)
 ```
 
+### **R-squared function**
+
+I will use the goodness of fit or R-squared function below to identify how well the observed data fits the model by comparing the observed bales to the values generated by the models.
+
+```{r}
+CalcRSquared <- function(observed,estimated){   
+  r <- cor(observed,estimated)   
+  R2 <- r^2   
+  R2 
+  }
+```
+
 ### **Unconstrained Spatial Interaction Model**
 
 In this section, I will calibrate an unconstrained spatial interaction model by using `glm()` of Base Stats.
 
-The general formula of Unconstrained Spatial Interaction Model
+Unconstrained spatial interaction uses all independent variables: propulsive(origin), attractive(destination), and distance.
 
-????Picture
+![Unconstrained](figure/unconstrained.png)
 
 ```{r}
-#|eval: false
+#| eval: false
 uncSIM <- glm(formula = MORNING_PEAK ~ 
                 log(ORIGIN_SCHOOL_COUNT)+
                 log(ORIGIN_HDB_DWELLING_UNIT) +
@@ -1427,44 +1694,22 @@ uncSIM <- glm(formula = MORNING_PEAK ~
               family = poisson(link = "log"),
               data = flow_data_tidy,
               na.action = na.exclude)
-uncSIM
+write_rds(uncSIM, "data/rds/uncSIM.rds")
+
 ```
-
-From the above results, we notice that positive coefficient:
-
--   ORIGIN_HDB_DWELLING_UNIT
-
--   ORIGIN_ENTERTAINMENT_UNIT
-
--   ORIGIN_FINSERV_COUNT
-
--   ORIGIN_RETAILS_COUNT
-
--   ORIGIN_MRT_EXIT_COUNT
-
--   DESTIN_SCHOOL_COUNT
-
--   DESTIN_HDB_DWELLING_UNIT
-
--   DESTIN_ENTERTAINMENT_COUNT
-
--   DESTIN_FINSERV_COUNT
-
--   DESTIN_RETAILS_COUNT
-
--   DESTIN_MRT_EXIT_COUNT
-
--   dist (inversely)
-
-### **R-squared function**
 
 ```{r}
-CalcRSquared <- function(observed,estimated){
-  r <- cor(observed,estimated)
-  R2 <- r^2
-  R2
-}
+uncSIM <- read_rds("data/rds/uncSIM.rds")
+summary(uncSIM)
 ```
+
+From the above results, I notice that all explanatory variables are statistically significant(p-value\< 0.05) and some variables show positive coefficient which is desirable for all variables except distance which should be inversely proportionate. The most influential variables are distance, destination mrt exit count, destination finserv count with -1.46 , 0.37 , and 0.33 respectively.
+
+-   ORIGIN_HDB_DWELLING_UNIT, ORIGIN_ENTERTAINMENT_COUNT, ORIGIN_FINSERV_COUNT, ORIGIN_RETAILS_COUNT, ORIGIN_MRT_EXIT_COUNT
+
+-   DESTIN_SCHOOL_COUNT, DESTIN_HDB_DWELLING_UNIT, DESTIN_ENTERTAINMENT_COUNT, DESTIN_FINSERV_COUNT, DESTIN_RETAILS_COUNT, DESTIN_MRT_EXIT_COUNT
+
+-   dist (inversely)
 
 Next, I will compute the R-squared of the unconstrained SIM by using the code chunk below.
 
@@ -1472,16 +1717,12 @@ Next, I will compute the R-squared of the unconstrained SIM by using the code ch
 CalcRSquared(uncSIM$data$MORNING_PEAK, uncSIM$fitted.values)
 ```
 
-I will computer the `r2_mcfadden` from **performance** package.
+The R-squared value of 0.31 indicates that 31% of the variability in the MORNING_PEAK dependent variable can be accounted for by the explanatory variables in the model.
 
-What is r2_mc_fadden?????
-
-```{r}
-r2_mcfadden(uncSIM)
-```
+Next, I will run another model with only positive coefficient for origin and destination variables and negative coefficient for distance.
 
 ```{r}
-#|eval: false
+#| eval: false
 uncSIM1 <- glm(formula = MORNING_PEAK ~ 
                 log(ORIGIN_HDB_DWELLING_UNIT) +
                 log(ORIGIN_ENTERTAINMENT_COUNT)+
@@ -1498,15 +1739,23 @@ uncSIM1 <- glm(formula = MORNING_PEAK ~
               family = poisson(link = "log"),
               data = flow_data_tidy,
               na.action = na.exclude)
-uncSIM1
+write_rds(uncSIM1, "data/rds/uncSIM1.rds")
+
+```
+
+```{r}
+uncSIM1 <- read_rds("data/rds/uncSIM1.rds")
+summary(uncSIM1)
 ```
 
 ```{r}
 CalcRSquared(uncSIM1$data$MORNING_PEAK, uncSIM1$fitted.values)
 ```
 
+From the above results, I notice that all explanatory variables are statistically significant(p-value\< 0.05) but some variables still show negative coefficient which is not desirable for all variables except distance. In view of this, I will run another model although the R-squared reduces. This reduction does not necessarily mean the model is performing worse, instead it reflects the trade-off between model simplicity and the ability to explain variance.
+
 ```{r}
-#|eval: false
+#| eval: false
 uncSIM2 <- glm(formula = MORNING_PEAK ~ 
                 log(ORIGIN_HDB_DWELLING_UNIT) +
                 log(ORIGIN_FINSERV_COUNT)+
@@ -1519,83 +1768,226 @@ uncSIM2 <- glm(formula = MORNING_PEAK ~
               family = poisson(link = "log"),
               data = flow_data_tidy,
               na.action = na.exclude)
-uncSIM2
+write_rds(uncSIM2, "data/rds/uncSIM2.rds")
+```
+
+```{r}
+uncSIM2 <- read_rds("data/rds/uncSIM2.rds")
+summary(uncSIM2)
 ```
 
 ```{r}
 CalcRSquared(uncSIM2$data$MORNING_PEAK, uncSIM2$fitted.values)
 ```
 
+From the above results, I notice that all explanatory variables are statistically significant(p-value\< 0.05) but all coefficient are as desired and the Rsquared for uncSIM2 is lower as compared to uncSIM and uncSIM1 which is favorable, suggesting that reducing the unnecessary variables resulting in better model.
+
+The most influential variables are distance, destination mrt exit count, destination finserv count with -1.44 , 0.32 , and 0.25 respectively.
+
 ### Origin(Production) constrained SIM
 
-In this section, I will fit an origin constrained SIM by using the code chunk below.
+Origin-constrained spatial interaction models focus on understanding the factors that influence the flow or movement of entities from specific starting points or origins to various destinations. These models emphasize the characteristics and constraints at the points of origin that shape the spatial interactions.
 
-The general formula of Origin Constrained Spatial Interaction Model
-
-??? Picture
+![Origin Constrained](figure/origin_constrained.png)
 
 ```{r}
-#|eval: false
-#orcSIM <- glm(formula = MORNING_PEAK ~ 
-               # ORIGIN_GRID_ID +
-               # log(ORIGIN_HDB_DWELLING_UNIT) +
-               # log(ORIGIN_FINSERV_COUNT)+
-               # log(ORIGIN_MRT_EXIT_COUNT)+
-               # log(dist),
-              #family = poisson(link = "log"),
-              #data = flow_data_tidy,
-              #na.action = na.exclude)
-#summary(orcSIM)
+#| eval: false
+orcSIM <- glm(formula = MORNING_PEAK ~ 
+                ORIGIN_GRID_ID +
+                log(DESTIN_SCHOOL_COUNT) +
+                log(DESTIN_HDB_DWELLING_UNIT) +
+                log(DESTIN_FINSERV_COUNT)+
+                log(DESTIN_MRT_EXIT_COUNT)+
+                log(dist),
+              family = poisson(link = "log"),
+              data = flow_data_tidy,
+              na.action = na.exclude)
+write_rds(orcSIM, "data/rds/orcSIM.rds")
+
 ```
 
 ```{r}
-#CalcRSquared(orcSIM$data$MORNING_PEAK, orcSIM$fitted.values)
+orcSIM <- read_rds("data/rds/orcSIM.rds")
+summary(orcSIM)
 ```
+
+```{r}
+orcSIM$coefficients[822:826]
+```
+
+```{r}
+CalcRSquared(orcSIM$data$MORNING_PEAK, orcSIM$fitted.values)
+```
+
+From the above results, I noticed that most variables are statistically significant(p-value\< 0.05) for ORIGIN_GRID_IDxxx but for log(DESTIN_SCHOOL_COUNT), log(DESTIN_HDB_DWELLING_UNIT), log(DESTIN_FINSERV_COUNT), log(DESTIN_MRT_EXIT_COUNT), log(dist), they are statistically significant(p-value\< 0.05). The Rsquared is higher than unconstrained which is 0.52.
+
+The most influential variables are distance, destination mrt exit count, destination finserv count with -1.51 , 0.40 , and 0.35 respectively.
 
 ### Destination constrained SIM
 
-In this section, I will fit an destination constrained SIM by using the code chunk below.
+Destination-constrained spatial interaction models concentrate on factors influencing the attractiveness and capacity of destinations to receive flows from various origins. These models highlight the characteristics and limitations at the destination points that affect the spatial interactions and the likelihood of being selected as destinations.
 
-The general formula of Destination Constrained Spatial Interaction Model
-
-??? Picture
+![Destination Constrained](figure/destination_constrained.png)
 
 ```{r}
 #|eval: false
-#flow_data_tidy$DESTIN_GRID_ID <- as.factor(flow_data_tidy$DESTIN_GRID_ID)
+flow_data_tidy$DESTIN_GRID_ID <- as.factor(flow_data_tidy$DESTIN_GRID_ID)
+decSIM <- glm(formula = MORNING_PEAK ~ 
+                DESTIN_GRID_ID +
+                log(ORIGIN_HDB_DWELLING_UNIT) +
+                log(ORIGIN_FINSERV_COUNT)+
+                log(ORIGIN_MRT_EXIT_COUNT)+
+                log(dist),
+              family = poisson(link = "log"),
+              data = flow_data_tidy,
+              na.action = na.exclude)
+write_rds(decSIM, "data/rds/decSIM.rds")
 
-#decSIM <- glm(formula = MORNING_PEAK ~ 
-             #   DESTIN_GRID_ID +
-             #   log(DESTIN_SCHOOL_COUNT) +
-             #   log(DESTIN_HDB_DWELLING_UNIT) +
-             #   log(DESTIN_FINSERV_COUNT)+
-             #   log(DESTIN_MRT_EXIT_COUNT)+
-             #   log(dist),
-             # family = poisson(link = "log"),
-             # data = flow_data_tidy,
-             # na.action = na.exclude)
-#summary(decSIM)
 ```
 
 ```{r}
-#CalcRSquared(decSIM$data$MORNING_PEAK, decSIM$fitted.values)
+decSIM <- read_rds("data/rds/decSIM.rds")
+summary(decSIM)
+```
+
+```{r}
+decSIM$coefficients[822:825]
+```
+
+```{r}
+CalcRSquared(decSIM$data$MORNING_PEAK, decSIM$fitted.values)
+```
+
+From the above results, I noticed that most variables are statistically significant(p-value\< 0.05) for DESTIN_GRID_IDxxx but for log(ORIGIN_HDB_DWELLING_UNIT), log(ORIGIN_FINSERV_COUNT), log(ORIGIN_MRT_EXIT_COUNT), log(dist), they are statistically significant(p-value\< 0.05). The Rsquared is higher than unconstrained which is 0.45.
+
+The most influential variables are distance, origin mrt exit count, origin finserv count with -1.50 , 0.28 , and 0.26 respectively.
+
+### Doubly Constrained SIM
+
+Doubly constrained spatial interaction model considers and incorporates both origin and destination constraints simultaneously. This approach is useful in situations where both the origins and destinations play crucial roles in shaping the overall pattern of interactions.
+
+The formula is as follows:
+
+![Doubly Constrained](figure/doubly_constrained.png)
+
+```{r}
+#| eval: false
+dbcSIM <- glm(formula = MORNING_PEAK ~ 
+                ORIGIN_GRID_ID +
+                DESTIN_GRID_ID +
+                log(dist),
+              family = poisson(link = "log"),
+              data = flow_data_tidy,
+              na.action = na.exclude)
+write_rds(dbcSIM, "data/rds/dbcSIM.rds")
+```
+
+```{r}
+dbcSIM <- read_rds("data/rds/dbcSIM.rds")
+summary(dbcSIM)
+```
+
+```{r}
+dbcSIM$coefficients[1642]
+```
+
+```{r}
+CalcRSquared(dbcSIM$data$MORNING_PEAK, dbcSIM$fitted.values)
+```
+
+From the above results, I noticed that most variables are statistically significant(p-value\< 0.05) for ORIGIN_GRID_IDxxx and DESTIN_GRID_IDxxx but log(dist) is statistically significant(p-value\< 0.05) with coefficient of -1.56. The Rsquared is the highest of all with other 3 models with 0.67.
+
+### Model Comparisons
+
+I will use the **`compare_performance()`** for **performance** package to compare the root mean square error (RMSE) of the SIMs. The better model has lower RMSE.
+
+I will first create a list called *model_list* by containing all our fitted SIM models using the code chunk below.
+
+```{r}
+model_list <- list(
+  Unconstrained = uncSIM2,
+  Origin_Constrained = orcSIM,
+  Destination_Constrained = decSIM,
+  Doubly_Constrained = dbcSIM)
+```
+
+```{r}
+compare_performance(model_list,
+                    metrics = "RMSE")
+```
+
+The results above shows that *doubly constrained SIM* is the **best** model among all four SIMs as it has the smallest RMSE value of 303.
+
+I will visualize the actual vs predicted Weekends/Holiday Morning Peak Hourp Trips with my best model as shown below.
+
+```{r}
+flow_data_tidy_plot <- flow_data_tidy
+flow_data_tidy_plot$dbc_predicted_value = as.numeric(dbcSIM$fitted.values)
+
+# Create a ggplot object
+ggplot(flow_data_tidy_plot, aes(x = dbc_predicted_value, y = MORNING_PEAK))+
+  geom_point() +
+  geom_smooth(method=lm) +
+  labs(title = "dbcSIM Model Visualization",
+       x = "Predicted",
+       y = "Actual Morning Peak") +
+  theme_minimal()
 ```
 
 ## Removing the flow from and to Johor Bahru
 
-In this section, I will remove the flow from and to Johor Bahru as I do not have any data of propulsiveness and attractiveness in Johor Bahru. (grid_id = 819, 942, 984)
+In this section, I will remove the flow from and to Johor Bahru as I do not have any data of propulsiveness and attractiveness in Johor Bahru. (grid_id = 819, 942, 984).
 
 Next, I will recalibrate the models.
 
 ```{r}
-#flow_data_tidy <- flow_data_tidy %>%
+ids_to_remove <- as.factor(c(819,942,984))
 
-  
-#flow_data_tidy = flow_data_tidy[~flow_data_tidy['ORIGIN_grid_id'].isin#(remove_values)]
-#flow_data_tidy = flow_data_tidy[~flow_data_tidy['DESTIN_grid_id'].isin#(remove_values)]
+flow_data_tidy_sg <- flow_data_tidy[!(flow_data_tidy$ORIGIN_GRID_ID %in% levels(ids_to_remove)), ]
+flow_data_tidy_sg <- flow_data_tidy_sg[!(flow_data_tidy_sg$DESTIN_GRID_ID %in% levels(ids_to_remove)), ]
 
 ```
 
-### Reference
+### Doubly Constrained SIM
 
-1.  <https://www.statology.org/long-vs-wide-data/>
+```{r}
+dbcSIM_sg <- glm(formula = MORNING_PEAK ~                  
+                ORIGIN_GRID_ID +                 
+                DESTIN_GRID_ID +                 
+                log(dist),               
+              family = poisson(link = "log"),               
+              data = flow_data_tidy_sg,               
+              na.action = na.exclude) 
+write_rds(dbcSIM_sg, "data/rds/dbcSIM_sg.rds")
+```
+
+```{r}
+dbcSIM_sg <- read_rds("data/rds/dbcSIM_sg.rds") 
+summary(dbcSIM_sg)
+```
+
+```{r}
+CalcRSquared(dbcSIM_sg$data$MORNING_PEAK, dbcSIM_sg$fitted.values)
+```
+
+```{r}
+model_list1 <- list(   
+  Doubly_Constrained = dbcSIM,
+  Doubly_Constrained_sg = dbcSIM_sg
+  )
+```
+
+```{r}
+compare_performance(model_list1, metrics = "RMSE")
+```
+
+The results above shows that *doubly constrained SIM* has lower RMSE but no significant change.
+
+## **Conclusion**
+
+In conclusion, four Spatial Interaction Model are constructed and compared to identify important factors influencing public bus commuter flow in Weekends/Holiday Morning Peak Hour from 11am to 2pm. The R-squared for unconstrained, origin constrained, destination constrained and doubly constrained are 0.24, 0.52, 0.45, and 0.67 respectively. The RMSE are 459, 365, 392, and 303 respectively. The significant factor for unconstrained and origin constrained, the most influential variables are distance, destination mrt exit count, destination finserv count. While for destination constrained, the most influential variables are distance, origin mrt exit count, origin finserv count and for doubly constrained, it is distance. In summary, for attractiveness and propulsiveness, distance plays a crucial part. It is followed by mrt exit count, an indicative that people use public bus and transfer to/from MRT/LRT. Then, the number of financial service is also important, it may be related to the number of population in which the more financial service/banks in an area, the highly populated the area is and thus the flow of people taking bus are higher.
+
+## References
+
+1.  Long vs Wide Data Picture from <https://www.statology.org/long-vs-wide-data/>
+2.  Prof. Kam Tin Seong Lectures from <https://isss624-ay2023-24nov.netlify.app/lesson>)
