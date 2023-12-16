@@ -135,7 +135,7 @@ summary(mpsz$BUSINESS_COUNT)
 ```
 
 ```{r}
-#|eeval: false
+#|eval: false
 #flow_data <- flow_data %>%
 #  left_join(mpsz_tidy,
 #            by =c("DESTIN_SZ"="SUBZONE_C"))

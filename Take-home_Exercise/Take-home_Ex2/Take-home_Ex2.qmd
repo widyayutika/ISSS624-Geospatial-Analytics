@@ -100,12 +100,14 @@ Before I get started, I need to ensure that **sf**, **spdep**, **tmap**, **tidyv
 
 -   httr
 
+-   performance
+
 The code chunk below is used to ensure that the necessary R packages have been installed , if it is yet to be installed, it will then be installed and ready to be used in the R environment.
 
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code" 
-pacman::p_load(sf, spdep, tmap, tidyverse, knitr, sp, reshape2, stplanr, httr)
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr, sp, reshape2, stplanr, httr, performance)
 ```
 
 ## **Working with Aspatial Data (Commuter Flow)**
@@ -150,10 +152,11 @@ glimpse(odbus)
 ```{r}
 #| code-fold: true 
 #| #| code-summary: "Show the code" 
-duplicate_rec <- odbus %>%   
-  group_by_all() %>%   
-  filter(n()>1) %>%   
-  ungroup()
+#| eval: false
+#duplicate_rec <- odbus %>%   
+#  group_by_all() %>%   
+#  filter(n()>1) %>%   
+#  ungroup()
 ```
 
 There is no duplicate record found on odbus dataset.
@@ -871,8 +874,7 @@ duplicate_entertn <- entertainment_sf %>%
 
 Apparently there are 2 duplicate entertainments, so I will remove the duplicated records and keep the first occurrence.
 
-```{r} entertainment_sf<- unique(entertainment_sf)}
-```
+`{r} entertainment_sf<- unique(entertainment_sf)}`
 
 Next, I will count the number of entertainments in each hexagonal grid.
 
@@ -1300,24 +1302,300 @@ I will write `flow_data_tidy` into local disk.
 write_rds(flow_data_tidy,"data/rds/flow_data_tidy.rds")
 ```
 
-Read the flow_data_tidy back into R
+## Calibrating Spatial Interaction Models
+
+In this section, I will calibrate Spatial Interaction Models by using Poisson Regression method.
+
+Why use Poisson Regression???
+
+What is the advantage of using it???
+
+### Importing the Modelling Data
+
+First, I will import the flow_data_tidy back into R.
 
 ```{r}
 flow_data_tidy <- read_rds("data/rds/flow_data_tidy.rds")
 ```
 
-## Calibrating Spatial Interaction Models
+### Visualising the Dependent Variables
 
-Data Exploration on Flow_data
+#### Distribution of Weekends/Holiday Morning Peak Trips
 
-Distribution of trips
+```{r}
+ggplot(data = flow_data_tidy,
+       aes(x = MORNING_PEAK)) +
+  geom_histogram()
+```
 
-Trips vs distance
+From the above plot, it is noted that the distribution of weekends/holiday morning peak hour is highly skewed to the right.
 
-log(trips) vs log(dist)
+Next, I will visualize the relation between dependent variable and one of the key independent variable in Spatial Interaction Model which is distance
 
-### Poisson Regression
+#### Trips vs Distance
 
-## Reference
+```{r}
+ggplot(data = flow_data_tidy,
+       aes(x = dist,
+           y = MORNING_PEAK)) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
+
+It is noticed that the relationship hardly resemble linear relationship. I will try to plot the scatter plot again using the log transformed of both variables and whether I can get a more linear relationship.
+
+#### Log(Morning Peak Trips) vs Log(Distance)
+
+```{r}
+ggplot(data = flow_data_tidy,
+       aes(x = log(dist),
+           y = log(MORNING_PEAK))) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
+
+Does not resemble linear ???
+
+### Checking for Variables with Zero Values
+
+Since Poisson Regression is based on log and log 0 is undefined, it is important to ensure that there are no 0 value in the explanatory variables.
+
+```{r}
+summary(flow_data_tidy)
+```
+
+The print report above reveals that some variables consists of 0 values:
+
+-   ORIGIN_SCHOOL_COUNT and DESTIN_SCHOOL_COUNT
+
+-   ORIGIN_HDB_DWELLING_UNIT, DESTIN_HDB_DWELLING_UNIT
+
+-   ORIGIN_BUSINESS_COUNT, DESTIN_BUSINESS_COUNT
+
+-   ORIGIN_ENTERTAINMENT_COUNT, DESTIN_ENTERTAINMENT_COUNT
+
+-   ORIGIN_FNB_COUNT, DESTIN_FNB_COUNT
+
+-   ORIGIN_FINSERV_COUNT, DESTIN_FINSERV_COUNT
+
+-   ORIGIN_LEIREC_COUNT, DESTIN_LEIREC_COUNT
+
+-   ORIGIN_RETAILS_COUNT, DESTIN_RETAILS_COUNT
+
+-   ORIGIN_MRT_EXIT_COUNT, DESTIN_MRT_EXIT_COUNT
+
+In view of this, code chunk below will be used to replace zero values to 0.99.
+
+```{r}
+flow_data_tidy <- flow_data_tidy %>% mutate_all(~ ifelse(. == 0, 0.99, .))
+```
+
+```{r}
+summary(flow_data_tidy)
+```
+
+### **Unconstrained Spatial Interaction Model**
+
+In this section, I will calibrate an unconstrained spatial interaction model by using `glm()` of Base Stats.
+
+The general formula of Unconstrained Spatial Interaction Model
+
+????Picture
+
+```{r}
+#|eval: false
+uncSIM <- glm(formula = MORNING_PEAK ~ 
+                log(ORIGIN_SCHOOL_COUNT)+
+                log(ORIGIN_HDB_DWELLING_UNIT) +
+                log(ORIGIN_BUSINESS_COUNT)+
+                log(ORIGIN_ENTERTAINMENT_COUNT)+
+                log(ORIGIN_FNB_COUNT)+
+                log(ORIGIN_FINSERV_COUNT)+
+                log(ORIGIN_LEIREC_COUNT)+
+                log(ORIGIN_RETAILS_COUNT)+
+                log(ORIGIN_MRT_EXIT_COUNT)+
+                log(DESTIN_SCHOOL_COUNT)+
+                log(DESTIN_HDB_DWELLING_UNIT) +
+                log(DESTIN_BUSINESS_COUNT)+
+                log(DESTIN_ENTERTAINMENT_COUNT)+
+                log(DESTIN_FNB_COUNT)+
+                log(DESTIN_FINSERV_COUNT)+
+                log(DESTIN_LEIREC_COUNT)+
+                log(DESTIN_RETAILS_COUNT)+
+                log(DESTIN_MRT_EXIT_COUNT)+
+                log(dist),
+              family = poisson(link = "log"),
+              data = flow_data_tidy,
+              na.action = na.exclude)
+uncSIM
+```
+
+From the above results, we notice that positive coefficient:
+
+-   ORIGIN_HDB_DWELLING_UNIT
+
+-   ORIGIN_ENTERTAINMENT_UNIT
+
+-   ORIGIN_FINSERV_COUNT
+
+-   ORIGIN_RETAILS_COUNT
+
+-   ORIGIN_MRT_EXIT_COUNT
+
+-   DESTIN_SCHOOL_COUNT
+
+-   DESTIN_HDB_DWELLING_UNIT
+
+-   DESTIN_ENTERTAINMENT_COUNT
+
+-   DESTIN_FINSERV_COUNT
+
+-   DESTIN_RETAILS_COUNT
+
+-   DESTIN_MRT_EXIT_COUNT
+
+-   dist (inversely)
+
+### **R-squared function**
+
+```{r}
+CalcRSquared <- function(observed,estimated){
+  r <- cor(observed,estimated)
+  R2 <- r^2
+  R2
+}
+```
+
+Next, I will compute the R-squared of the unconstrained SIM by using the code chunk below.
+
+```{r}
+CalcRSquared(uncSIM$data$MORNING_PEAK, uncSIM$fitted.values)
+```
+
+I will computer the `r2_mcfadden` from **performance** package.
+
+What is r2_mc_fadden?????
+
+```{r}
+r2_mcfadden(uncSIM)
+```
+
+```{r}
+#|eval: false
+uncSIM1 <- glm(formula = MORNING_PEAK ~ 
+                log(ORIGIN_HDB_DWELLING_UNIT) +
+                log(ORIGIN_ENTERTAINMENT_COUNT)+
+                log(ORIGIN_FINSERV_COUNT)+
+                log(ORIGIN_RETAILS_COUNT)+
+                log(ORIGIN_MRT_EXIT_COUNT)+
+                log(DESTIN_SCHOOL_COUNT)+
+                log(DESTIN_HDB_DWELLING_UNIT) +
+                log(DESTIN_ENTERTAINMENT_COUNT)+
+                log(DESTIN_FINSERV_COUNT)+
+                log(DESTIN_RETAILS_COUNT)+
+                log(DESTIN_MRT_EXIT_COUNT)+
+                log(dist),
+              family = poisson(link = "log"),
+              data = flow_data_tidy,
+              na.action = na.exclude)
+uncSIM1
+```
+
+```{r}
+CalcRSquared(uncSIM1$data$MORNING_PEAK, uncSIM1$fitted.values)
+```
+
+```{r}
+#|eval: false
+uncSIM2 <- glm(formula = MORNING_PEAK ~ 
+                log(ORIGIN_HDB_DWELLING_UNIT) +
+                log(ORIGIN_FINSERV_COUNT)+
+                log(ORIGIN_MRT_EXIT_COUNT)+
+                log(DESTIN_SCHOOL_COUNT)+
+                log(DESTIN_HDB_DWELLING_UNIT) +
+                log(DESTIN_FINSERV_COUNT)+
+                log(DESTIN_MRT_EXIT_COUNT)+
+                log(dist),
+              family = poisson(link = "log"),
+              data = flow_data_tidy,
+              na.action = na.exclude)
+uncSIM2
+```
+
+```{r}
+CalcRSquared(uncSIM2$data$MORNING_PEAK, uncSIM2$fitted.values)
+```
+
+### Origin(Production) constrained SIM
+
+In this section, I will fit an origin constrained SIM by using the code chunk below.
+
+The general formula of Origin Constrained Spatial Interaction Model
+
+??? Picture
+
+```{r}
+#|eval: false
+#orcSIM <- glm(formula = MORNING_PEAK ~ 
+               # ORIGIN_GRID_ID +
+               # log(ORIGIN_HDB_DWELLING_UNIT) +
+               # log(ORIGIN_FINSERV_COUNT)+
+               # log(ORIGIN_MRT_EXIT_COUNT)+
+               # log(dist),
+              #family = poisson(link = "log"),
+              #data = flow_data_tidy,
+              #na.action = na.exclude)
+#summary(orcSIM)
+```
+
+```{r}
+#CalcRSquared(orcSIM$data$MORNING_PEAK, orcSIM$fitted.values)
+```
+
+### Destination constrained SIM
+
+In this section, I will fit an destination constrained SIM by using the code chunk below.
+
+The general formula of Destination Constrained Spatial Interaction Model
+
+??? Picture
+
+```{r}
+#|eval: false
+#flow_data_tidy$DESTIN_GRID_ID <- as.factor(flow_data_tidy$DESTIN_GRID_ID)
+
+#decSIM <- glm(formula = MORNING_PEAK ~ 
+             #   DESTIN_GRID_ID +
+             #   log(DESTIN_SCHOOL_COUNT) +
+             #   log(DESTIN_HDB_DWELLING_UNIT) +
+             #   log(DESTIN_FINSERV_COUNT)+
+             #   log(DESTIN_MRT_EXIT_COUNT)+
+             #   log(dist),
+             # family = poisson(link = "log"),
+             # data = flow_data_tidy,
+             # na.action = na.exclude)
+#summary(decSIM)
+```
+
+```{r}
+#CalcRSquared(decSIM$data$MORNING_PEAK, decSIM$fitted.values)
+```
+
+## Removing the flow from and to Johor Bahru
+
+In this section, I will remove the flow from and to Johor Bahru as I do not have any data of propulsiveness and attractiveness in Johor Bahru. (grid_id = 819, 942, 984)
+
+Next, I will recalibrate the models.
+
+```{r}
+#flow_data_tidy <- flow_data_tidy %>%
+
+  
+#flow_data_tidy = flow_data_tidy[~flow_data_tidy['ORIGIN_grid_id'].isin#(remove_values)]
+#flow_data_tidy = flow_data_tidy[~flow_data_tidy['DESTIN_grid_id'].isin#(remove_values)]
+
+```
+
+### Reference
 
 1.  <https://www.statology.org/long-vs-wide-data/>
