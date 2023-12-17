@@ -1951,6 +1951,7 @@ flow_data_tidy_sg <- flow_data_tidy_sg[!(flow_data_tidy_sg$DESTIN_GRID_ID %in% l
 ### Doubly Constrained SIM
 
 ```{r}
+#| eval: false
 dbcSIM_sg <- glm(formula = MORNING_PEAK ~                  
                 ORIGIN_GRID_ID +                 
                 DESTIN_GRID_ID +                 
