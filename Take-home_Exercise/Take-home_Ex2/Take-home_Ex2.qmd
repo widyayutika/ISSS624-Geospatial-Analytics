@@ -1769,7 +1769,7 @@ summary(uncSIM2)
 CalcRSquared(uncSIM2$data$MORNING_PEAK, uncSIM2$fitted.values)
 ```
 
-From the above results, I notice that all explanatory variables are statistically significant(p-value\< 0.05) but all coefficient are as desired and the Rsquared for uncSIM2 is lower as compared to uncSIM and uncSIM1 which is favorable, suggesting that reducing the unnecessary variables resulting in better model.
+From the above results, I notice that all explanatory variables are statistically significant(p-value\< 0.05) but all coefficient are as desired although the Rsquared for uncSIM2 is lower as compared to uncSIM and uncSIM1.
 
 The most influential variables are distance, destination mrt exit count, destination finserv count with -1.44 , 0.32 , and 0.25 respectively.
 
@@ -1980,4 +1980,4 @@ In conclusion, four Spatial Interaction Model are constructed and compared to id
 ## References
 
 1.  Long vs Wide Data Picture from <https://www.statology.org/long-vs-wide-data/>
-2.  Prof. Kam Tin Seong Lectures from <https://isss624-ay2023-24nov.netlify.app/lesson>)
+2.  Prof. Kam Tin Seong Lectures from <https://isss624-ay2023-24nov.netlify.app/lesson>
