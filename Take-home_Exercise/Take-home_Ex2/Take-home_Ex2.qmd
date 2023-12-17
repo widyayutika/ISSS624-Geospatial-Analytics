@@ -19,7 +19,7 @@ Urban mobility challenges encompass understanding the driving forces behind earl
 
 The objective is to conduct a case study showcasing the potential of geospatial data science in integrating publicly available data to build spatial interaction models, explaining factors influencing urban mobility patterns in public bus.
 
-## **The Study Area and Data**
+## The Study Area and Data
 
 ### Aspatial Data
 
@@ -78,7 +78,7 @@ The specific tasks of this take-home exercise are as follows:
 
 -   With reference to the Spatial Interaction Model output tables, maps and data visualisation prepared, describe the modelling results. (not more than 100 words per visual).
 
-## **Setting the Analytical Tools**
+## Setting the Analytical Tools
 
 Before I get started, I need to ensure that **sf**, **spdep**, **tmap**, **tidyverse,** and **knitr** packages of R are currently installed in my R.
 
@@ -110,16 +110,16 @@ The code chunk below is used to ensure that the necessary R packages have been i
 pacman::p_load(sf, spdep, tmap, tidyverse, knitr, sp, reshape2, stplanr, httr, performance)
 ```
 
-## **Working with Aspatial Data (Commuter Flow)**
+## Working with Aspatial Data (Commuter Flow)
 
-### **Importing OD Csv File into R Environment**
+### Importing OD Csv File into R Environment
 
 Next, I will import *Passenger Volume by Origin Destination Bus Stops* data set: *origin_destination_bus_202310.csv downloaded from LTA Datamall for October 2023* into R by using [*`st_read()`*](#0){style="font-size: 11pt;"} of **readr** package. The output is R dataframe class. In total, there are 5,694,297 records with 7 columns.
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
 ```
 
@@ -128,7 +128,7 @@ The code chunk below uses [*`glimpse()`*](https://www.rdocumentation.org/package
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"
-#| eval: false
+
 glimpse(odbus)
 ```
 
@@ -137,7 +137,7 @@ From the glimpse() check above, it is shown that the ORIGIN_PT_CODE and DESTINAT
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"
-#| eval: false  
+
 odbus$ORIGIN_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
 odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE) 
 ```
@@ -147,7 +147,7 @@ Next, I will confirm the data type changes using glimpse().
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 glimpse(odbus)
 ```
 
@@ -156,7 +156,7 @@ glimpse(odbus)
 ```{r}
 #| code-fold: true 
 #| #| code-summary: "Show the code" 
-#| eval: false
+
 duplicate_rec <- odbus %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
@@ -172,7 +172,7 @@ For the purpose of this take-home exercise, I will extract commuting flows on We
 ```{r}
 #| code-fold: true   
 #| code-summary: "Show the code"
-#| eval: false 
+ 
 odbus11_14 <- odbus %>%      
   filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%      
   filter(TIME_PER_HOUR >= 11 & TIME_PER_HOUR <= 14) %>%
@@ -183,7 +183,7 @@ odbus11_14 <- odbus %>%
 ```{r}
 #| code-fold: true   
 #| code-summary: "Show the code"
-#| eval: false 
+ 
 glimpse(odbus11_14)
 ```
 
@@ -198,7 +198,6 @@ The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/refere
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code"
-#| eval: false 
 busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
   st_transform(crs = 3414)
 ```
@@ -208,7 +207,7 @@ busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code"
-#| eval: false 
+ 
 duplicate_bus_stop <- busstop %>%   
   group_by(BUS_STOP_N) %>%   
   filter(n()>1)
@@ -219,7 +218,7 @@ There are 32 duplicated records with same BUS_STOP_N but different geometry poin
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code"
-#| eval: false 
+ 
 busstop <- busstop %>%   
   distinct(BUS_STOP_N, .keep_all =TRUE)
 ```
@@ -231,7 +230,7 @@ The code chunk below uses [*`st_read()`*](https://r-spatial.github.io/sf/refere
 ```{r}
 #| code-fold: true 
 #| code-summary: "Show the code"
-#| eval: false  
+ 
 mpsz <- st_read(dsn = "data/geospatial", layer = "MPSZ-2019") %>%
   st_transform(crs = 3414)
 ```
@@ -245,10 +244,10 @@ The code chunk below uses [*`st_make_grid`*](https://r-spatial.github.io/sf/refe
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 area_honeycomb_grid = st_make_grid(busstop, cellsize=750, what = "polygons", square = FALSE)      
 # To sf and add grid ID    
-c = st_sf(area_honeycomb_grid) %>%
+honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
   # add grid ID            
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 ```
@@ -258,7 +257,6 @@ Next, I will change the data type of grid_id to factor and will only retain the 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
 
 honeycomb_grid_sf$grid_id <- as.factor(honeycomb_grid_sf$grid_id)
 
@@ -272,14 +270,14 @@ There are 834 hexagonal units with at least 1 busstop.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 summary(honeycomb_with_busstop$busstop_count)
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -309,7 +307,7 @@ In this section, I uses [`st_intersection()`](https://r-spatial.github.io/sf/ref
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 busstop_honeycomb <- st_intersection(busstop, honeycomb_with_busstop) %>%
   select(BUS_STOP_N, LOC_DESC, grid_id) %>%
   st_drop_geometry()
@@ -324,7 +322,7 @@ First, I will append "ORIGIN_GRID_ID" and "ORIGIN_LOC_DESC" from busstop_honeyco
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 od_data <- left_join(odbus11_14 , busstop_honeycomb,
             by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
   rename(ORIGIN_BS = ORIGIN_PT_CODE,
@@ -338,7 +336,7 @@ Next, I will check for duplicated records on od_data using the chunk code below.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 duplicate_od_data <- od_data %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
@@ -352,7 +350,7 @@ Next, I will update od_data data frame by performing another left join with buss
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 od_data <- left_join(od_data , busstop_honeycomb,
             by = c("DESTIN_BS" = "BUS_STOP_N")) %>%
   rename(DESTIN_GRID_ID = grid_id,
@@ -362,7 +360,7 @@ od_data <- left_join(od_data , busstop_honeycomb,
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 missing_values <- colSums(is.na(od_data))
 
 # Print the columns with missing values
@@ -376,7 +374,7 @@ So, I will remove the rows with NA (in total, now there are 216,644 records) and
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 od_data <- od_data %>%
   drop_na()
 ```
@@ -384,7 +382,7 @@ od_data <- od_data %>%
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 od_data1 <- od_data %>%
   group_by(ORIGIN_GRID_ID, DESTIN_GRID_ID) %>%
   summarise(MORNING_PEAK = sum(TRIPS))
@@ -395,7 +393,7 @@ I will check the distribution of the Morning Peak trips using summary as shown b
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 summary(od_data1$MORNING_PEAK)
 ```
 
@@ -404,25 +402,25 @@ I will save the output into an rds file format.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 write_rds(od_data, "data/rds/od_data.rds")
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 od_data <- read_rds("data/rds/od_data.rds")
 ```
 
-## **Computing Distance Matrix by** Analytics Hexagon Level
+## Computing Distance Matrix by Analytics Hexagon Level
 
 First [`as.Spatial()`](https://r-spatial.github.io/sf/reference/coerce-methods.html) from **sp** package will be used to convert honeycomb_with_busstop from sf tibble data frame to SpatialPolygonsDataFrame of sp object as shown in the code chunk below. This method is used because it is faster to compute distance matrix using sp than sf package.
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 honeycomb_with_busstop_sp <- as(honeycomb_with_busstop, "Spatial") 
 honeycomb_with_busstop_sp
 ```
@@ -432,7 +430,7 @@ Next, [`spDists()`](https://www.rdocumentation.org/packages/sp/versions/2.1-1/t
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 dist <- spDists(honeycomb_with_busstop_sp, 
                 longlat = FALSE)
 head(dist, n=c(8, 8))
@@ -443,7 +441,7 @@ From the matrix above, it is noticed that both the column and row headers are no
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 grid_id_desc <- honeycomb_with_busstop$grid_id
 
 colnames(dist) <- paste0(grid_id_desc)
@@ -460,7 +458,7 @@ For reference : <https://www.statology.org/long-vs-wide-data/>
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 distPair <- melt(dist) %>%
   rename(dist = value)
 head(distPair, 10)
@@ -471,7 +469,7 @@ There are 695556 rows of distPair as the number of possible pair of hexagon perm
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 summary(distPair$dist)
 ```
 
@@ -482,20 +480,20 @@ Next, I will rename var1 and var 2 into origin and destination grid_id.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 distPair <- distPair %>%
   rename(ORIGIN_GRID_ID = Var1,
          DESTIN_GRID_ID = Var2)
 ```
 
-## **Preparing Flow Data**
+## Preparing Flow Data
 
 In this section, I will rename my od_data1 to flow_data.
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 flow_data <- od_data1
 
 print(head(flow_data))
@@ -510,7 +508,7 @@ The code chunk below is used to add a new field in `flow_data` dataframe.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 flow_data$isinter <- ifelse(
   flow_data$ORIGIN_GRID_ID == flow_data$DESTIN_GRID_ID, 
   0, flow_data$MORNING_PEAK)
@@ -521,7 +519,7 @@ I will create 2 separate data frames for intra and inter zonal flow.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 intra_zonal_flow <- flow_data %>% 
   filter(isinter ==0)
 
@@ -534,25 +532,23 @@ From a total of 62176 flow data, there are 568 intra-zonal flow and 61,608 inter
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 intra_zonal_flow
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
 inter_zonal_flow
 ```
 
-### **Combining Passenger Volume Data (Inter-Zonal Flow Data) with Distance Value**
+### Combining Passenger Volume Data (Inter-Zonal Flow Data) with Distance Value
 
 Before we can join "*inter_zonal_flow*" and "*distPair"*, I will convert data value type of *ORIGIN_GRID_ID* and *DESTIN_GRID_ID* fields of distPair into factor data type.
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
 distPair$ORIGIN_GRID_ID  <- as.factor(distPair$ORIGIN_GRID_ID)
 distPair$DESTIN_GRID_ID  <- as.factor(distPair$DESTIN_GRID_ID )
 ```
@@ -562,7 +558,6 @@ Now, `left_join()` of **dplyr** will be used to combine "*inter_zonal_flow"
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
 flow_data1 <- inter_zonal_flow %>%
   left_join (distPair,
              by = c("ORIGIN_GRID_ID" = "ORIGIN_GRID_ID",
@@ -570,14 +565,14 @@ flow_data1 <- inter_zonal_flow %>%
 print(head(flow_data1))
 ```
 
-## **Visualising O-D Flows of Weekends/Holiday Morning Peak Hour**
+## Visualising O-D Flows of Weekends/Holiday Morning Peak Hour
 
 In this section, I will create a desire line of inter-zonal flow (flow_data1) by using `od2line` of **stplanr** package.
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 flowLine <- od2line(flow = flow_data1, zones = honeycomb_with_busstop, zone_code = "grid_id") 
 ```
 
@@ -586,7 +581,7 @@ To visualise the resulting desire lines, the code chunk below is used. In the ma
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("plot") 
 tm_shape(mpsz)+   
@@ -613,7 +608,6 @@ From the map above, I observed a noticeable concentration of public bus flow in 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
 flowLine %>% filter(MORNING_PEAK >= 30000)
 ```
 
@@ -622,7 +616,6 @@ The public bus flow suggest that the predominant movement is from Woodlands Chec
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
 summary((flowLine %>% filter(MORNING_PEAK >= 5000))$dist)
 ```
 
@@ -631,7 +624,7 @@ Furthermore, I observed that during weekend morning, the predominant public bus 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 intra_flow_map <- honeycomb_with_busstop %>%
   inner_join(intra_zonal_flow, by = c("grid_id" = "ORIGIN_GRID_ID")) %>%
   select("grid_id","MORNING_PEAK","busstop_count","area_honeycomb_grid")
@@ -641,7 +634,7 @@ intra_flow_map <- honeycomb_with_busstop %>%
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -671,7 +664,7 @@ The below code chunk is for the interactive maps to get more insights.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -797,7 +790,7 @@ Next, I will import the schools final data set and tidy it up (i.e. renaming the
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 schools <- read_csv("data/aspatial/schools.csv") %>%
   rename(latitude='results.LATITUDE', longitude='results.LONGITUDE')%>%
   select(postal_code, school_name, latitude,longitude)
@@ -808,7 +801,7 @@ Then, I will convert the school coordinates into Singapore Projected Coordinate 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 schools_sf <- st_as_sf(schools, 
                        coords=c('longitude', 'latitude'),
                        crs=4326) %>%
@@ -820,7 +813,7 @@ After that, I will count the number of schools in each heaxgon using the **`st_i
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'SCHOOL_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, schools_sf))
 ```
 
@@ -829,14 +822,14 @@ Next, I will check the school_count distributions using summary().
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$SCHOOL_COUNT)
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -866,7 +859,6 @@ I will import the hdb in csv format provided and collated by Prof. Kam. This dat
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
 hdb <- read_csv("data/aspatial/hdb.csv")
 ```
 
@@ -875,7 +867,7 @@ Next, I will convert the longitude and latitude from WSG84 to Singapore Projecte
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 hdb_sf <- st_as_sf(hdb,                         
                        coords=c('lng', 'lat'),                        
                        crs=4326) %>%   
@@ -887,7 +879,7 @@ Next, I will check for duplicated hdb.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 duplicate_hdb <- hdb_sf %>%   
   group_by(blk_no,street) %>%   
   filter(n()>1) %>%   
@@ -899,7 +891,7 @@ There are no duplicated hdb, so next, I will count the dwelling units in each he
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 dwelling_units_count <- st_intersection(honeycomb_with_busstop, hdb_sf) %>%
   group_by(grid_id) %>%
   summarise(HDB_DWELLING_UNIT=sum(total_dwelling_units)) %>%
@@ -909,7 +901,7 @@ dwelling_units_count <- st_intersection(honeycomb_with_busstop, hdb_sf) %>%
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop = left_join(honeycomb_with_busstop, dwelling_units_count)
 ```
 
@@ -918,7 +910,7 @@ Next, I will check the distribution of dwelling units in Singapore.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$HDB_DWELLING_UNIT)
 ```
 
@@ -927,7 +919,7 @@ Next, I will NA with 0, meaning there is the hexagonal grid is not a residential
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop <- honeycomb_with_busstop %>%
   mutate(HDB_DWELLING_UNIT = replace_na(HDB_DWELLING_UNIT, 0))
 ```
@@ -935,7 +927,7 @@ honeycomb_with_busstop <- honeycomb_with_busstop %>%
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -965,7 +957,6 @@ This business data is curated by Prof. Kam, consisting locations of business est
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
 business_sf <- st_read(dsn="data/geospatial", layer="Business")
 ```
 
@@ -974,7 +965,6 @@ Next, I will check for duplicated business.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
 duplicate_business <- business_sf %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
@@ -986,7 +976,7 @@ Apparently there are 2 duplicate businesses, so I will remove the duplicated rec
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 business_sf<- unique(business_sf)
 ```
 
@@ -995,7 +985,7 @@ Next, I will count the number of businesses in each hexagonal grid.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'BUSINESS_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, business_sf))
 
 ```
@@ -1005,14 +995,14 @@ Next, I will check the distribution of BUSINESS_COUNT.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$'BUSINESS_COUNT')
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -1042,7 +1032,7 @@ This entertainment data is curated by Prof. Kam, consisting of 114 point coordin
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 entertainment_sf <- st_read(dsn="data/geospatial", layer="entertn")
 ```
 
@@ -1051,7 +1041,7 @@ Next, I will check for duplicated entertainment.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 duplicate_entertn <- entertainment_sf %>%   
   group_by_all() %>%   
   filter(n()>1) %>%   
@@ -1063,7 +1053,7 @@ Apparently there are 2 duplicate entertainments, so I will remove the duplicated
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 entertainment_sf<- unique(entertainment_sf)
 ```
 
@@ -1072,7 +1062,7 @@ Next, I will count the number of entertainments in each hexagonal grid.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'ENTERTAINMENT_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, entertainment_sf))
 ```
 
@@ -1081,14 +1071,14 @@ Next, I will check the distribution of ENTERTAINMENT_COUNT.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$'ENTERTAINMENT_COUNT')
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE) 
 tmap_mode("view") 
 tm_shape(mpsz)+   
@@ -1118,7 +1108,7 @@ This F&B data is curated by Prof. Kam, consisting of 1,919 point coordinates of 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 fnb_sf <- st_read(dsn="data/geospatial", layer="F&B")
 ```
 
@@ -1127,7 +1117,7 @@ Next, I will check for duplicated F&B.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false  
+  
 duplicate_fnb <- fnb_sf %>%      
   group_by_all() %>%      
   filter(n()>1) %>%      
@@ -1139,7 +1129,7 @@ There are no duplicated F&B so next, I will count the number of F&B in each hexa
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'FNB_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, fnb_sf))
 ```
 
@@ -1148,14 +1138,14 @@ Next, I will check the distribution of FNB_COUNT.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$'FNB_COUNT')
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE)  
 tmap_mode("view")  
 tm_shape(mpsz)+      
@@ -1187,7 +1177,6 @@ This Financial Service data is curated by Prof. Kam, consisting \]of 3,320 point
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
 finserv_sf <- st_read(dsn="data/geospatial", layer="FinServ")
 ```
 
@@ -1196,7 +1185,7 @@ Next, I will check for duplicated financial services.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 duplicate_finserv <- finserv_sf %>%         
   group_by_all() %>%         
   filter(n()>1) %>%         
@@ -1208,7 +1197,7 @@ Apparently there are 524 duplicate financial services, so I will remove the dupl
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 finserv_sf<- unique(finserv_sf)
 ```
 
@@ -1217,7 +1206,7 @@ Next, I will count the number of financial services in each hexagonal grid.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'FINSERV_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, finserv_sf))
 ```
 
@@ -1226,14 +1215,14 @@ Next, I will check the distribution of FINSERV_COUNT.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$'FINSERV_COUNT')
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE)   
 tmap_mode("view")   
 tm_shape(mpsz)+
@@ -1265,7 +1254,7 @@ This Leisure and Recreation data is curated by Prof. Kam, consisting of 1,217 po
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 lei_rec_sf <- st_read(dsn="data/geospatial", layer="Liesure&Recreation")
 ```
 
@@ -1274,7 +1263,7 @@ Next, I will check for duplicated Leisure and Recreation.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false   
+   
 duplicate_lei_rec <- lei_rec_sf %>%            
   group_by_all() %>%            
   filter(n()>1) %>%            
@@ -1286,7 +1275,7 @@ There is no duplicated Leisure and Recreation so next, I will count the number o
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'LEIREC_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, lei_rec_sf))
 ```
 
@@ -1295,14 +1284,14 @@ Next, I will check the distribution of LEIREC_COUNT.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$'LEIREC_COUNT')
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE)    
 tmap_mode("view")    
 tm_shape(mpsz)+   
@@ -1334,7 +1323,7 @@ This Retails data is curated by Prof. Kam, consisting of 37,635 point coordinate
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 retail_sf <- st_read(dsn="data/geospatial", layer="Retails")
 ```
 
@@ -1343,7 +1332,7 @@ Next, I will check for duplicated Retails.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false     
+    
 duplicate_retail <- retail_sf %>%               
   group_by_all() %>%               
   filter(n()>1) %>%               
@@ -1355,7 +1344,7 @@ Apparently there are 347 duplicate Retails, so I will remove the duplicated reco
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 retail_sf<- unique(retail_sf)
 ```
 
@@ -1364,7 +1353,7 @@ Next, I will count the number of Retails in each hexagonal grid.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'RETAILS_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, retail_sf))
 ```
 
@@ -1373,14 +1362,14 @@ Next, I will check the distribution of RETAILS_COUNT.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$'RETAILS_COUNT')
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE)     
 tmap_mode("view")     
 tm_shape(mpsz)+      
@@ -1410,7 +1399,7 @@ This MRT Station Exit data is downloaded from [LTA DataMall](https://datamall.lt
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 MRT_exit_sf <- st_read(dsn="data/geospatial", layer="Train_Station_Exit_Layer") %>%
   st_transform(crs = 3414)
 ```
@@ -1420,7 +1409,7 @@ Next, I will check for duplicated MRT Exits.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false 
+ 
 duplicate_MRT_exit <- MRT_exit_sf %>%                  
   group_by(stn_name,exit_code) %>%                  
   filter(n()>1) %>%                  
@@ -1432,7 +1421,7 @@ Apparently there are 17 duplicate MRT Exits, so I will remove the duplicated rec
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 MRT_exit_sf<- MRT_exit_sf %>%
   distinct(stn_name, exit_code, .keep_all=TRUE)
 ```
@@ -1442,7 +1431,7 @@ Next, I will count the number of MRT Exits in each hexagonal grid.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 honeycomb_with_busstop$'MRT_EXIT_COUNT' <- lengths(st_intersects(honeycomb_with_busstop, MRT_exit_sf))
 ```
 
@@ -1451,14 +1440,14 @@ Next, I will check the distribution of MRT Exits.
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 summary(honeycomb_with_busstop$'MRT_EXIT_COUNT')
 ```
 
 ```{r}
 #| code-fold: true  
 #| code-summary: "Show the code"  
-#| eval: false
+
 tmap_options(check.and.fix = TRUE)     
 tmap_mode("view")     
 tm_shape(mpsz)+      
@@ -1649,7 +1638,7 @@ flow_data_tidy <- flow_data_tidy %>% mutate_all(~ ifelse(. == 0, 0.99, .))
 summary(flow_data_tidy)
 ```
 
-### **R-squared function**
+### R-squared function
 
 I will use the goodness of fit or R-squared function below to identify how well the observed data fits the model by comparing the observed bales to the values generated by the models.
 
@@ -1661,7 +1650,7 @@ CalcRSquared <- function(observed,estimated){
   }
 ```
 
-### **Unconstrained Spatial Interaction Model**
+### Unconstrained Spatial Interaction Model
 
 In this section, I will calibrate an unconstrained spatial interaction model by using `glm()` of Base Stats.
 
@@ -1984,7 +1973,7 @@ compare_performance(model_list1, metrics = "RMSE")
 
 The results above shows that *doubly constrained SIM* has lower RMSE but no significant change.
 
-## **Conclusion**
+## Conclusion
 
 In conclusion, four Spatial Interaction Model are constructed and compared to identify important factors influencing public bus commuter flow in Weekends/Holiday Morning Peak Hour from 11am to 2pm. The R-squared for unconstrained, origin constrained, destination constrained and doubly constrained are 0.24, 0.52, 0.45, and 0.67 respectively. The RMSE are 459, 365, 392, and 303 respectively. The significant factor for unconstrained and origin constrained, the most influential variables are distance, destination mrt exit count, destination finserv count. While for destination constrained, the most influential variables are distance, origin mrt exit count, origin finserv count and for doubly constrained, it is distance. In summary, for attractiveness and propulsiveness, distance plays a crucial part. It is followed by mrt exit count, an indicative that people use public bus and transfer to/from MRT/LRT. Then, the number of financial service is also important, it may be related to the number of population in which the more financial service/banks in an area, the highly populated the area is and thus the flow of people taking bus are higher.
 
