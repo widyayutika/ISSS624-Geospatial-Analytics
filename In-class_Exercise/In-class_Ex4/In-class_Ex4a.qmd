@@ -1,5 +1,5 @@
 ---
-title: "In-class_Ex4: Calibrating Spatial Interaction Models with R"
+title: "In-class_Ex4A: Calibrating Spatial Interaction Models with R"
 author: "Widya Tantiya Yutika"
 date: "09 December 2023"
 date-modified: "last-modified"
@@ -29,8 +29,10 @@ For the purpose of this exercise, five r packages will be used. They are:
 
 -   [ggpubr](https://rpkgs.datanovia.com/ggpubr/) for creating publication quality statistical graphics.
 
+-   **knitr** integrates computing and reporting
+
 ```{r}
-pacman::p_load(tmap, sf, performance, ggpubr, tidyverse)
+pacman::p_load(tmap, sf, performance, ggpubr, tidyverse, knitr)
 ```
 
 ## The Data

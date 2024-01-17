@@ -1,5 +1,5 @@
 ---
-title: "In-class_Ex5: Spatial Econometric Interaction Modelling"
+title: "In-class_Ex5"
 author: "Widya Tantiya Yutika"
 date: "16 December 2023"
 date-modified: "last-modified"
