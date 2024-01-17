@@ -1,7 +1,23 @@
 ---
-title: "ISSS624"
+title: "ISSS624 - Applied Geospatial Analytics"
 ---
 
 Welcome to ISSS624 Applied Geospatial Analytics!
 
-In this webpage, I am going to share with you my learning journey of geospatial analytics.
+In this webpage, I am going to share with you my learning journey of geospatial analytics using R.
+
+There are 3 sections in this webpage:
+
+-   Hands-On Exercise includes practical exercise based on comprehensive lecturer notes.
+
+    These exercises are designed to provide a hands-on application of the concepts covered in class, ensuring you gain a deep understanding of geospatial analytics using R.
+
+-   In-Class Exercise includes real-time activities within a collaborative classroom.
+
+    These exercises encompass questions derived from lecture content, strategically crafted to ensure that students can follow the class seamlessly.
+
+-   Take-Home Exercise includes individual assignments.
+
+    These assignments serve as a bridge between theory and practical application, allowing me to solidify my skills and showcase my understanding of geospatial analytics.
+
+Feel free to navigate through the various sections and let us explore the world of spatial data analysis and uncover the power of geospatial tools in gaining insights into our environment.
