@@ -30,19 +30,19 @@ website:
           href: Hands-on_Exercise/Hands-on_Ex15/Hands-on_Ex15.html
       - text: In-class Exercise
         menu: 
-        - text: In-class Exercise 1: Introduction
+        - text: In-class Exercise 1 Introduction
           href: In-class_Exercise/In-class_Ex1/In-class_Ex1.html
-        - text: In-class Exercise 2: Spatial Weights
+        - text: In-class Exercise 2 Spatial Weights
           href: In-class_Exercise/In-class_Ex2/In-class_Ex2.html
-        - text: In-class Exercise 2A: EHSA
+        - text: In-class Exercise 2A EHSA
           href: In-class_Exercise/In-class_Ex2/In-class_Ex2a.html
-        - text: In-class Exercise 3: Calibrating SIMs
+        - text: In-class Exercise 3 Calibrating SIMs
           href: In-class_Exercise/In-class_Ex3/In-class_Ex3.html
-        - text: In-class Exercise 4: SIMs Variables
+        - text: In-class Exercise 4 SIMs Variables
           href: In-class_Exercise/In-class_Ex4/In-class_Ex4.html
-        - text: In-class Exercise 4A: SIMs
+        - text: In-class Exercise 4A SIMs
           href: In-class_Exercise/In-class_Ex4/In-class_Ex4a.html
-        - text: In-class Exercise 5: SEIM
+        - text: In-class Exercise 5 SEIM
           href: In-class_Exercise/In-class_Ex5/In-class_Ex5.html
       - text: Take-home Exercise
         menu: 
