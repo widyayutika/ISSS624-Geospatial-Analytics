@@ -1,5 +1,5 @@
 ---
-title: "In-class_Ex4: SIMs"
+title: "In-class_Ex4: Preparing Spatial Interaction Modelling Variables"
 author: "Widya Tantiya Yutika"
 date: "09 December 2023"
 date-modified: "last-modified"
@@ -13,25 +13,47 @@ editor: visual
 
 ## Overview
 
-In this in-class exercise, you will gain hands-on experience on the following tasks:
+A healthy baby need healthy food. Likewise, a well calibrated Spatial Interaction Model need conceptually logical and well prepared propulsiveness and attractiveness variables. In this in-class exercise, you will gain hands-on experience on preparing propulsiveness and attractiveness variables require for calibrating spatial interaction models. By the end of this in-class exercise, you will be able to:
 
--   performing geocoding using data downloaded from data.gov.sg
+-   perform geocoding by using SLA OneMap API,
 
--   calibrating Geographically Weighted Poisson Regression
+-   convert an aspatial data into a simple feature tibble data.frame,
+
+-   perform point-in-polygon count analysis, and
+
+-   append the propulsiveness and attractiveness variables onto a flow data.
 
 ## Getting Started
+
+To get start, the following R packages will be loaded into R environment.
 
 ```{r}
 pacman::p_load(tidyverse, sf, httr, tmap)
 ```
 
-Notes: httr allows us to work with html (to communicate with web server.
+Notes: httr allows us to work with html (to communicate with web server).
 
-## Geocoding using SLA API
+## **Counting number of schools in each URA Planning Subzone**
 
-Address geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth's surface.
+### **Downloading General information of schools data from data.gov.sg**
 
-Singapore Land Authority (SLA) supports online geocoding service called [OneMap API](https://www.onemap.gov.sg/apidocs/).
+To get started, you are required to download *General information of schools* data set of School Directory and Information from [data.gov.sg](https://beta.data.gov.sg/).
+
+::: callout-important
+We assume that the downloaded School Directory and Information is placed in a sub-folder called `data/aspatial/`).
+:::
+
+### Geocoding using SLA API
+
+Address geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth\'s surface.
+
+Singapore Land Authority (SLA) supports an online geocoding service called [OneMap API](https://www.onemap.gov.sg/apidocs/). The [Search](https://www.onemap.gov.sg/apidocs/apidocs) API looks up the address data or 6-digit postal code for an entered value. It then returns both latitude, longitude and x,y coordinates of the searched location.
+
+The code chunks below will perform geocoding using [SLA OneMap API](https://www.onemap.gov.sg/docs/#onemap-rest-apis). The input data will be in csv file format. It will be read into R Studio environment using *read_csv* function of **readr** package. A collection of http call functions of **httr** package of R will then be used to pass the individual records to the geocoding server at OneMap.
+
+Two tibble data.frames will be created if the geocoding process completed successfully. They are called `found` and `not_found`. `found` contains all records that are geocoded correctly and `not_found` contains postal that failed to be geocoded.
+
+Lastly, the found data table will joined with the initial csv data table by using a unique identifier (i.e. POSTAL) common to both data tables. The output data table will then save as an csv file called `found`.
 
 ```{r}
 #| eval: false
@@ -55,13 +77,15 @@ for (postcode in postcodes){
 }
 ```
 
-Notes:
-
+::: callout-note
 #\| eval: false -\> run 1 time only
 
 #\| echo: false -\> the code wont be shown on html page
 
 #\| message: false -\> the message will not come up
+:::
+
+Next, the code chunk below will be used to combine both *found* and *not_found* data.frames into a single tibble data.frame called *merged*. At the same time, we will write *merged* and *not_found* tibble data.frames into two separate csv files called *schools* and *not_found* respectively.
 
 ```{r}
 #| eval: false
@@ -70,9 +94,17 @@ write.csv (merged, file='data/aspatial/schools.csv')
 write.csv (not_found, file ='data/aspatial/not_found.csv')
 ```
 
-## Converting an aspatial data into a simple feature tibble data.frame
+::: callout-note
+## Do It Yourself!
+
+-   With the help of Google Map, located the location information of the ungeocoded school by using it\'s postcode.
+
+-   Update the `results.LATITUDE` and `results.LONGITUDE` fields of the ungeocoded record in `schoolss.csv` manually.
+:::
 
 ### Importing and tidying schools data
+
+In this sub-section, you will import *schools.csv* into R environment and at the same time tidying the data by selecting only the necessary fields as well as rename some fields.
 
 ```{r}
 schools <- read_csv("data/aspatial/schools.csv")%>%
@@ -84,6 +116,10 @@ schools <- read_csv("data/aspatial/schools.csv")%>%
 
 ### Converting an aspatial data into sf tibble data.frame
 
+Next, you will convert schools tibble data.frame data into a simple feature tibble data.frame called *schools_sf* by using values in latitude and longitude fields.
+
+Refer to [st_as_sf()](https://r-spatial.github.io/sf/reference/st_as_sf.html) of sf package.
+
 ```{r}
 schools_sf <- st_as_sf(schools, 
                        coords=c('longitude', 'latitude'),
@@ -93,6 +129,8 @@ schools_sf <- st_as_sf(schools,
 
 ### Plotting a point simple feature layer
 
+In this section, we will create a point symbol map showing the location of schools.
+
 ```{r}
 tmap_mode("view")
 tm_shape(schools_sf)+
@@ -101,24 +139,36 @@ tm_view(set.zoom.limits =c(11,14))
 tmap_mode("plot")
 ```
 
-## Preparing
+### **Performing point-in-polygon count process**
+
+First, let us import *MPSZ-2019* shapefile into R environment and save it as an sf tibble data.frame called *mpsz*.
 
 ```{r}
 mpsz <- st_read(dsn="data/geospatial", layer="MPSZ-2019")%>%
   st_transform(crs=3414)
 ```
 
+Next, we will count the number of schools located inside the planning subzones.
+
 ```{r}
 mpsz$'SCHOOL_COUNT' <- lengths(st_intersects(mpsz, schools_sf))
 ```
+
+It is always a good practice to examine the summary statistics of the derived variable.
 
 ```{r}
 summary(mpsz$SCHOOL_COUNT)
 ```
 
+## **Counting number of business in each URA Planning Subzone**
+
+First, let us import *business* shapefile into R environment and save it as an sf tibble data.frame called *business_sf*.
+
 ```{r}
 business_sf <- st_read(dsn="data/geospatial", layer="Business")
 ```
+
+Next, we will create a point symbol map showing the location of business.
 
 ```{r}
 tmap_options(check.and.fix=TRUE)
@@ -129,129 +179,9 @@ tm_shape(business_sf)+
 
 ```
 
+Next, we will count the number of business located inside the planning subzones.
+
 ```{r}
 mpsz$'BUSINESS_COUNT' <- lengths(st_intersects(mpsz, business_sf))
 summary(mpsz$BUSINESS_COUNT)
 ```
-
-```{r}
-#|eval: false
-#flow_data <- flow_data %>%
-#  left_join(mpsz_tidy,
-#            by =c("DESTIN_SZ"="SUBZONE_C"))
-```
-
-Notes: calibrate journey to home : then change to ORIGIN_SZ
-
-## Checking for variables with zero values
-
-## Model Calibration
-
-```{r}
-pacman::p_load(tmap, sf, performance, ggpubr, tidyverse)
-```
-
-## The Data
-
-```{r}
-flow_data<-read_rds("data/rds/flow_data_tidy.rds")
-```
-
-```{r}
-glimpse(flow_data)
-```
-
-Notes: business small scale and middle scale industry; retail mainly for shopping purposes.
-
-Notes: change to morning_peak to TRIPS and dist to DIST (because there is a dist function in R)
-
-```{r}
-flow_data$FlowNoIntra <- ifelse(
-  flow_data$ORIGIN_SZ==flow_data$DESTIN_SZ,
-  0, flow_data$MORNING_PEAK)
-flow_data$offset <-ifelse(
-  flow_data$ORIGIN_SZ==flow_data$DESTIN_SZ,
-  0.000001,1
-)
-```
-
-```{r}
-inter_zonal_flow <- flow_data %>%
-  filter(FlowNoIntra >0)
-```
-
-```{r}
-inter_zonal_flow <- inter_zonal_flow %>%
-  rename(TRIPS= MORNING_PEAK,
-         DIST=dist)
-```
-
-### Origin(Production) constrained SIM
-
-```{r}
-orcSIM_Poisson <- glm(formula = TRIPS ~ 
-                        ORIGIN_SZ +
-                        log(SCHOOL_COUNT)+
-                        log(RETAIL_COUNT)+
-                        log(DIST) -1,
-                      family = poisson (link='log'),
-                      data = inter_zonal_flow,
-                      na.action = na.exclude)
-summary(orcSIM_Poisson)
-```
-
-Notes1: The purpose of -1 on log(DIST) is to remove the intercept.
-
-Notes2: need to look at log(SCHOOL_COUNT) , log(RETAIL_COUNT), log(DIST), p-value
-
--   log(SCHOOL_COUNT) , log(RETAIL_COUNT) -\> attractiveness, need to be positive but if crime rate need to be negative (people dont want to stay near area with high crime rate)
-
-<!-- -->
-
--   log(DIST) -\> need to be negative(inverse distance), meaning that the closer the distance, people are more willing to go
-
--   p-value \< 0.0.5 -\> if not \<0.05 need to recalibrate the model, remove the variables
-
-### Goodness-of-Fit
-
-```{r}
-CalcRSquared <- function (observed, estimated){
-  r<- cor(observed, estimated)
-  R2 <- r^2
-  R2
-}
-```
-
-```{r}
-CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
-```
-
-```{r}
-performance_rmse(orcSIM_Poisson, normalized= FALSE)
-```
-
-### Doubly Constrained
-
-```{r}
-dbcSIM_Poisson <- glm(formula = TRIPS ~
-                        ORIGIN_SZ+
-                        DESTIN_SZ+
-                        log(DIST),
-                      family = poisson(link='log'),
-                      data= inter_zonal_flow,
-                      na.action= na.exclude
-                      )
-dbcSIM_Poisson
-```
-
-```{r}
-model_list <- list(originConstrained=orcSIM_Poisson, doublyConstrained=dbcSIM_Poisson)
-```
-
-```{r}
-compare_performance(model_list, metrics="RMSE")
-```
-
-Notes: smaller RMSE -\> better model
-
-Notes: if there is an outlier, try to remove and compare with current model.

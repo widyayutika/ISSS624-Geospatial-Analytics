@@ -13,7 +13,7 @@ editor: visual
 
 ## **Overview**
 
-This in-class introduces an alternative R package to spdep package. The package is called [**sfdep**](https://sfdep.josiahparry.com/). According to Josiah Parry, the developer of the package, \"sfdep builds on the great shoulders of **spdep** package for spatial dependence. sfdep creates an sf and tidyverse friendly interface to the package as well as introduces new functionality that is not present in spdep. sfdep utilizes list columns extensively to make this interface possible.\"
+This in-class introduces an alternative R package to spdep package. The package is called [**sfdep**](https://sfdep.josiahparry.com/). According to Josiah Parry, the developer of the package, "sfdep builds on the great shoulders of **spdep** package for spatial dependence. sfdep creates an sf and tidyverse friendly interface to the package as well as introduces new functionality that is not present in spdep. sfdep utilizes list columns extensively to make this interface possible."
 
 ## Getting Started
 
@@ -135,7 +135,7 @@ In this section, we will learn how to derive the contiguity neighbour list and c
 
 ### **Identifying** Continuity Spatial Weights: Queen's Method
 
-In the code chunk below [`st_contiguity()`](https://sfdep.josiahparry.com/reference/st_contiguity.html) is used to derive a contiguity neighbour list by using Queen\'s method.
+In the code chunk below [`st_contiguity()`](https://sfdep.josiahparry.com/reference/st_contiguity.html) is used to derive a contiguity neighbour list by using Queen's method.
 
 ```{r}
 wm_q <- hunan_GDPPC %>%
@@ -182,12 +182,12 @@ Using the steps you learned in previous lesson, display nb_queen sf tibble data 
 kable(head(wm_q,n=10))
 ```
 
-### **Identify contiguity neighbours: Rooks\' method**
+### **Identify contiguity neighbours: Rooks' method**
 
 ::: callout-note
 ## Do It Yourself!
 
-Using the steps you just learned, derive a contiguity neighbour list using Rooks\' method.
+Using the steps you just learned, derive a contiguity neighbour list using Rooks' method.
 :::
 
 ```{r}
@@ -206,7 +206,7 @@ There are times that we need to identify high order contiguity neighbours. To ac
 ::: callout-note
 ## Do It Yourself!
 
-Using the steps you just learned, derive a contiguity neighbour list using lag 2 Queen\'s method.
+Using the steps you just learned, derive a contiguity neighbour list using lag 2 Queen's method.
 :::
 
 ```{r}
@@ -226,7 +226,7 @@ nb2_queen
 
 ### Computing local Moran's I
 
-In this section, you will learn how to compute Local Moran\'s I of GDPPC at county level by using [`local_moran()`](https://sfdep.josiahparry.com/reference/local_moran.html) of sfdep package.
+In this section, you will learn how to compute Local Moran's I of GDPPC at county level by using [`local_moran()`](https://sfdep.josiahparry.com/reference/local_moran.html) of sfdep package.
 
 ```{r}
 lisa <- wm_q %>%
@@ -260,7 +260,7 @@ The output of `local_moran()` is a sf data.frame containing the columns ii, eii,
 [`unnest()`](https://tidyr.tidyverse.org/reference/unnest.html) of **tidyr** package is used to expand a list-column containing data frames into rows and columns.
 :::
 
-### **Visualising local Moran\'s I**
+### **Visualising local Moran's I**
 
 In this code chunk below, tmap functions are used prepare a choropleth map by using value in the *ii* field.
 
@@ -274,7 +274,7 @@ tm_shape(lisa) +
             main.title.size = 0.8)
 ```
 
-### **Visualising p-value of local Moran\'s I**
+### **Visualising p-value of local Moran's I**
 
 In the code chunk below, tmap functions are used prepare a choropleth map by using value in the *p_ii_sim* field.
 
@@ -291,7 +291,7 @@ tm_shape(lisa) +
 For p-values, the appropriate classification should be 0.001, 0.01, 0.05 and not significant instead of using default classification scheme.
 :::
 
-### **Visualising local Moran\'s I and p-value**
+### **Visualising local Moran's I and p-value**
 
 For effective comparison, it will be better for us to plot both maps next to each other as shown below.
 

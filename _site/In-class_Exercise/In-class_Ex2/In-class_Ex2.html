@@ -185,6 +185,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">In-class Exercise 4</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex4/In-class_Ex4a.html" rel="" target="">
+ <span class="dropdown-text">In-class Exercise 4A</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../../In-class_Exercise/In-class_Ex5/In-class_Ex5.html" rel="" target="">
  <span class="dropdown-text">In-class Exercise 5</span></a>
   </li>  
@@ -247,12 +251,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#deriving-continuity-spatial-weights" id="toc-deriving-continuity-spatial-weights" class="nav-link" data-scroll-target="#deriving-continuity-spatial-weights"><span class="header-section-number">5</span> Deriving Continuity Spatial Weights</a>
   <ul class="collapse">
   <li><a href="#identifying-continuity-spatial-weights-queens-method" id="toc-identifying-continuity-spatial-weights-queens-method" class="nav-link" data-scroll-target="#identifying-continuity-spatial-weights-queens-method"><span class="header-section-number">5.1</span> <strong>Identifying</strong> Continuity Spatial Weights: Queen’s Method</a></li>
-  <li><a href="#identify-contiguity-neighbours-rooks-method" id="toc-identify-contiguity-neighbours-rooks-method" class="nav-link" data-scroll-target="#identify-contiguity-neighbours-rooks-method"><span class="header-section-number">5.2</span> <strong>Identify contiguity neighbours: Rooks' method</strong></a></li>
+  <li><a href="#identify-contiguity-neighbours-rooks-method" id="toc-identify-contiguity-neighbours-rooks-method" class="nav-link" data-scroll-target="#identify-contiguity-neighbours-rooks-method"><span class="header-section-number">5.2</span> <strong>Identify contiguity neighbours: Rooks’ method</strong></a></li>
   <li><a href="#identifying-higher-order-neighbors" id="toc-identifying-higher-order-neighbors" class="nav-link" data-scroll-target="#identifying-higher-order-neighbors"><span class="header-section-number">5.3</span> <strong>Identifying higher order neighbors</strong></a></li>
   <li><a href="#computing-local-morans-i" id="toc-computing-local-morans-i" class="nav-link" data-scroll-target="#computing-local-morans-i"><span class="header-section-number">5.4</span> Computing local Moran’s I</a></li>
-  <li><a href="#visualising-local-morans-i" id="toc-visualising-local-morans-i" class="nav-link" data-scroll-target="#visualising-local-morans-i"><span class="header-section-number">5.5</span> <strong>Visualising local Moran's I</strong></a></li>
-  <li><a href="#visualising-p-value-of-local-morans-i" id="toc-visualising-p-value-of-local-morans-i" class="nav-link" data-scroll-target="#visualising-p-value-of-local-morans-i"><span class="header-section-number">5.6</span> <strong>Visualising p-value of local Moran's I</strong></a></li>
-  <li><a href="#visualising-local-morans-i-and-p-value" id="toc-visualising-local-morans-i-and-p-value" class="nav-link" data-scroll-target="#visualising-local-morans-i-and-p-value"><span class="header-section-number">5.7</span> <strong>Visualising local Moran's I and p-value</strong></a></li>
+  <li><a href="#visualising-local-morans-i" id="toc-visualising-local-morans-i" class="nav-link" data-scroll-target="#visualising-local-morans-i"><span class="header-section-number">5.5</span> <strong>Visualising local Moran’s I</strong></a></li>
+  <li><a href="#visualising-p-value-of-local-morans-i" id="toc-visualising-p-value-of-local-morans-i" class="nav-link" data-scroll-target="#visualising-p-value-of-local-morans-i"><span class="header-section-number">5.6</span> <strong>Visualising p-value of local Moran’s I</strong></a></li>
+  <li><a href="#visualising-local-morans-i-and-p-value" id="toc-visualising-local-morans-i-and-p-value" class="nav-link" data-scroll-target="#visualising-local-morans-i-and-p-value"><span class="header-section-number">5.7</span> <strong>Visualising local Moran’s I and p-value</strong></a></li>
   </ul></li>
   </ul>
 </nav>
@@ -297,7 +301,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="overview"><span class="header-section-number">1</span> <strong>Overview</strong></h2>
-<p>This in-class introduces an alternative R package to spdep package. The package is called&nbsp;<a href="https://sfdep.josiahparry.com/"><strong>sfdep</strong></a>. According to Josiah Parry, the developer of the package, "sfdep builds on the great shoulders of&nbsp;<strong>spdep</strong>&nbsp;package for spatial dependence. sfdep creates an sf and tidyverse friendly interface to the package as well as introduces new functionality that is not present in spdep. sfdep utilizes list columns extensively to make this interface possible."</p>
+<p>This in-class introduces an alternative R package to spdep package. The package is called&nbsp;<a href="https://sfdep.josiahparry.com/"><strong>sfdep</strong></a>. According to Josiah Parry, the developer of the package, “sfdep builds on the great shoulders of&nbsp;<strong>spdep</strong>&nbsp;package for spatial dependence. sfdep creates an sf and tidyverse friendly interface to the package as well as introduces new functionality that is not present in spdep. sfdep utilizes list columns extensively to make this interface possible.”</p>
 </section>
 <section id="getting-started" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="getting-started"><span class="header-section-number">2</span> Getting Started</h2>
@@ -478,7 +482,7 @@ Do It Yourself!
 <p>In this section, we will learn how to derive the contiguity neighbour list and contiguity spatial weights separately. Then, we will learn how to combine both steps into a single process.</p>
 <section id="identifying-continuity-spatial-weights-queens-method" class="level3" data-number="5.1">
 <h3 data-number="5.1" class="anchored" data-anchor-id="identifying-continuity-spatial-weights-queens-method"><span class="header-section-number">5.1</span> <strong>Identifying</strong> Continuity Spatial Weights: Queen’s Method</h3>
-<p>In the code chunk below&nbsp;<a href="https://sfdep.josiahparry.com/reference/st_contiguity.html"><code>st_contiguity()</code></a>&nbsp;is used to derive a contiguity neighbour list by using Queen's method.</p>
+<p>In the code chunk below&nbsp;<a href="https://sfdep.josiahparry.com/reference/st_contiguity.html"><code>st_contiguity()</code></a>&nbsp;is used to derive a contiguity neighbour list by using Queen’s method.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> hunan_GDPPC <span class="sc">%&gt;%</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nb =</span> <span class="fu">st_contiguity</span>(geometry),</span>
@@ -750,7 +754,7 @@ Do It Yourself!
 </div>
 </section>
 <section id="identify-contiguity-neighbours-rooks-method" class="level3" data-number="5.2">
-<h3 data-number="5.2" class="anchored" data-anchor-id="identify-contiguity-neighbours-rooks-method"><span class="header-section-number">5.2</span> <strong>Identify contiguity neighbours: Rooks' method</strong></h3>
+<h3 data-number="5.2" class="anchored" data-anchor-id="identify-contiguity-neighbours-rooks-method"><span class="header-section-number">5.2</span> <strong>Identify contiguity neighbours: Rooks’ method</strong></h3>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -761,7 +765,7 @@ Do It Yourself!
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Using the steps you just learned, derive a contiguity neighbour list using Rooks' method.</p>
+<p>Using the steps you just learned, derive a contiguity neighbour list using Rooks’ method.</p>
 </div>
 </div>
 <div class="cell">
@@ -787,7 +791,7 @@ Do It Yourself!
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Using the steps you just learned, derive a contiguity neighbour list using lag 2 Queen's method.</p>
+<p>Using the steps you just learned, derive a contiguity neighbour list using lag 2 Queen’s method.</p>
 </div>
 </div>
 <div class="cell">
@@ -858,7 +862,7 @@ First 10 features:
 </section>
 <section id="computing-local-morans-i" class="level3" data-number="5.4">
 <h3 data-number="5.4" class="anchored" data-anchor-id="computing-local-morans-i"><span class="header-section-number">5.4</span> Computing local Moran’s I</h3>
-<p>In this section, you will learn how to compute Local Moran's I of GDPPC at county level by using&nbsp;<a href="https://sfdep.josiahparry.com/reference/local_moran.html"><code>local_moran()</code></a>&nbsp;of sfdep package.</p>
+<p>In this section, you will learn how to compute Local Moran’s I of GDPPC at county level by using&nbsp;<a href="https://sfdep.josiahparry.com/reference/local_moran.html"><code>local_moran()</code></a>&nbsp;of sfdep package.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>lisa <span class="ot">&lt;-</span> wm_q <span class="sc">%&gt;%</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">local_moran =</span> <span class="fu">local_moran</span>(</span>
@@ -893,7 +897,7 @@ Important
 </div>
 </section>
 <section id="visualising-local-morans-i" class="level3" data-number="5.5">
-<h3 data-number="5.5" class="anchored" data-anchor-id="visualising-local-morans-i"><span class="header-section-number">5.5</span> <strong>Visualising local Moran's I</strong></h3>
+<h3 data-number="5.5" class="anchored" data-anchor-id="visualising-local-morans-i"><span class="header-section-number">5.5</span> <strong>Visualising local Moran’s I</strong></h3>
 <p>In this code chunk below, tmap functions are used prepare a choropleth map by using value in the&nbsp;<em>ii</em>&nbsp;field.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"plot"</span>)</span>
@@ -909,7 +913,7 @@ Important
 </div>
 </section>
 <section id="visualising-p-value-of-local-morans-i" class="level3" data-number="5.6">
-<h3 data-number="5.6" class="anchored" data-anchor-id="visualising-p-value-of-local-morans-i"><span class="header-section-number">5.6</span> <strong>Visualising p-value of local Moran's I</strong></h3>
+<h3 data-number="5.6" class="anchored" data-anchor-id="visualising-p-value-of-local-morans-i"><span class="header-section-number">5.6</span> <strong>Visualising p-value of local Moran’s I</strong></h3>
 <p>In the code chunk below, tmap functions are used prepare a choropleth map by using value in the&nbsp;<em>p_ii_sim</em>&nbsp;field.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"plot"</span>)</span>
@@ -937,7 +941,7 @@ Warning
 </div>
 </section>
 <section id="visualising-local-morans-i-and-p-value" class="level3" data-number="5.7">
-<h3 data-number="5.7" class="anchored" data-anchor-id="visualising-local-morans-i-and-p-value"><span class="header-section-number">5.7</span> <strong>Visualising local Moran's I and p-value</strong></h3>
+<h3 data-number="5.7" class="anchored" data-anchor-id="visualising-local-morans-i-and-p-value"><span class="header-section-number">5.7</span> <strong>Visualising local Moran’s I and p-value</strong></h3>
 <p>For effective comparison, it will be better for us to plot both maps next to each other as shown below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"plot"</span>)</span>
