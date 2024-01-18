@@ -1,5 +1,5 @@
 ---
-title: "Hands-on_Ex3: Spatial Interaction Models "
+title: "Hands-on Exercise 3: Spatial Interaction Models "
 author: "Widya Tantiya Yutika"
 date: "30 November 2023"
 date-modified: "last-modified"

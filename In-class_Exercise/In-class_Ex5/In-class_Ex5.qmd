@@ -249,7 +249,7 @@ The `od_data` data.frame should look similar the table below.
 kable(head(od_data, n = 5))
 ```
 
-Before we move to the next task, let\'s save od_data into an rds file by using the code chunk below.
+Before we move to the next task, let's save od_data into an rds file by using the code chunk below.
 
 ```{r}
 #write_rds(od_data, "data/rds/od_data.rds")
@@ -257,7 +257,7 @@ Before we move to the next task, let\'s save od_data into an rds file by using t
 
 ### **Computing Distance Matrix**
 
-In spatial interaction, a distance matrix is a table that shows the distance between pairs of locations. For example, in the table below we can see an Euclidean distance of 3926.0025 between MESZ01 and RVSZ05, of 3939.1079 between MESZ01 and SRSZ01, and so on. By definition, an location\'s distance from itself, which is shown in the main diagonal of the table, is 0.
+In spatial interaction, a distance matrix is a table that shows the distance between pairs of locations. For example, in the table below we can see an Euclidean distance of 3926.0025 between MESZ01 and RVSZ05, of 3939.1079 between MESZ01 and SRSZ01, and so on. By definition, an location's distance from itself, which is shown in the main diagonal of the table, is 0.
 
 ![](figure/distance_matrix.png)
 
@@ -338,7 +338,7 @@ The `flow_data` should look similar the table below.
 kable(head(flow_data, n = 10))
 ```
 
-Before moving on to the next task, let\'s save *flow_data* into an rds file by usign the code chunk below.
+Before moving on to the next task, let's save *flow_data* into an rds file by usign the code chunk below.
 
 ```{r}
 #write_rds(flow_data, "data/rds/mpsz_flow.rds")
@@ -462,7 +462,7 @@ mpsz_var$`LR_COUNT`<- lengths(
 glimpse(mpsz_var)
 ```
 
-Before moving to the next task, let\'s save *mpsz_var* into an rds file by using the code chunk below.
+Before moving to the next task, let's save *mpsz_var* into an rds file by using the code chunk below.
 
 ```{r}
 #write_rds(mpsz_var, "data/rds/mpsz_var.rds")
@@ -593,9 +593,9 @@ The three different estimators currently supported by spflow are:
 
 -   **Maximum Likelihood Estimation (MLE)** which is the default estimation procedure. The matrix form estimation in the framework of this model was first developed by LeSage and Pace (2008) and then improved by Dargel (2021) . Spatial two-stage least squares (S2SLS)
 
--   **Spatial Two-stage Least Squares (S2SLS)** estimator is an adaptation of the one proposed by Kelejian and Prucha (1998), to the case of origin-destination flows, with up to three neighborhood matrices Dargel (2021). A similar estimation is done by Tamesue and Tsutsumi (2016). The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = \"s2sls\").
+-   **Spatial Two-stage Least Squares (S2SLS)** estimator is an adaptation of the one proposed by Kelejian and Prucha (1998), to the case of origin-destination flows, with up to three neighborhood matrices Dargel (2021). A similar estimation is done by Tamesue and Tsutsumi (2016). The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = "s2sls").
 
--   **Bayesian Markov Chain Monte Carlo (MCMC)** estimator is based on the ideas of LeSage and Pace (2009) and incorporates the improvements proposed in Dargel (2021) . The estimation is based on a tuned Metropolis-Hastings sampler for the auto-regressive parameters, and for the remaining parameters it uses Gibbs sampling. The routine uses 5500 iterations of the sampling procedure and considers the first 2500 as burn-in period. The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = \"mcmc\").
+-   **Bayesian Markov Chain Monte Carlo (MCMC)** estimator is based on the ideas of LeSage and Pace (2009) and incorporates the improvements proposed in Dargel (2021) . The estimation is based on a tuned Metropolis-Hastings sampler for the auto-regressive parameters, and for the remaining parameters it uses Gibbs sampling. The routine uses 5500 iterations of the sampling procedure and considers the first 2500 as burn-in period. The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = "mcmc").
 
 Estimation with default settings requires two arguments: an **sp_multi_network-class** and a **flow_formula**. The flow_formula specifies the model we want to estimate. The function offers a formula interface adapted to spatial interaction models, which has the following structure: Y \~ O\_(X1) + D\_(X2) + I\_(X3) + P\_(X4). This structure reflects the different data sources involved in such a model. On the left hand side there is the independent variable Y which corresponds to the vector of flows. On the right hand side we have all the explanatory variables. The functions O\_(...) and D\_(...) indicate which variables are used as characteristics of the origins and destinations respectively. Similarly, I\_(...) indicates variables that should be used for the intra-regional parameters. Finally, P\_(...) declares which variables describe origin-destination pairs, which most frequently will include a measure of distance.
 

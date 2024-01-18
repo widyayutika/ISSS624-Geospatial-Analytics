@@ -45,7 +45,7 @@ We assume that the downloaded School Directory and Information is placed in a su
 
 ### Geocoding using SLA API
 
-Address geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth\'s surface.
+Address geocoding, or simply geocoding, is the process of taking a aspatial description of a location, such as an address or postcode, and returning geographic coordinates, frequently latitude/longitude pair, to identify a location on the Earth's surface.
 
 Singapore Land Authority (SLA) supports an online geocoding service called [OneMap API](https://www.onemap.gov.sg/apidocs/). The [Search](https://www.onemap.gov.sg/apidocs/apidocs) API looks up the address data or 6-digit postal code for an entered value. It then returns both latitude, longitude and x,y coordinates of the searched location.
 
@@ -97,7 +97,7 @@ write.csv (not_found, file ='data/aspatial/not_found.csv')
 ::: callout-note
 ## Do It Yourself!
 
--   With the help of Google Map, located the location information of the ungeocoded school by using it\'s postcode.
+-   With the help of Google Map, located the location information of the ungeocoded school by using it's postcode.
 
 -   Update the `results.LATITUDE` and `results.LONGITUDE` fields of the ungeocoded record in `schoolss.csv` manually.
 :::
