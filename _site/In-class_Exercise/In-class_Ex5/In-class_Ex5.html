@@ -123,12 +123,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-hands-on-exercise">    
         <li>
-    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex1/Hands-on_Ex1.html" rel="" target="">
- <span class="dropdown-text">Hands-on Exercise 1</span></a>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex1.1/Hands-on_Ex1.1.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 1.1</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex2/Hands-on_Ex2.html" rel="" target="">
- <span class="dropdown-text">Hands-on Exercise 2</span></a>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex1.2/Hands-on_Ex1.2.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 1.2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex2.1/Hands-on_Ex2.1.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 2.1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex2.2/Hands-on_Ex2.2.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 2.2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex2.3/Hands-on_Ex2.3.html" rel="" target="">
+ <span class="dropdown-text">Hands-on Exercise 2.3</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex3/Hands-on_Ex3.html" rel="" target="">
@@ -137,25 +149,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li>
     <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex4/Hands-on_Ex4.html" rel="" target="">
  <span class="dropdown-text">Hands-on Exercise 4</span></a>
-  </li>  
-        <li class="dropdown-header">Hands-on Exercise 5</li>
-        <li class="dropdown-header">Hands-on Exercise 6</li>
-        <li class="dropdown-header">Hands-on Exercise 7</li>
-        <li>
-    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex8/Hands-on_Ex8.html" rel="" target="">
- <span class="dropdown-text">Hands-on Exercise 8</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex9/Hands-on_Ex9.html" rel="" target="">
- <span class="dropdown-text">Hands-on Exercise 9</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex10/Hands-on_Ex10.html" rel="" target="">
- <span class="dropdown-text">Hands-on Exercise 10</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../../Hands-on_Exercise/Hands-on_Ex15/Hands-on_Ex15.html" rel="" target="">
- <span class="dropdown-text">Hands-on Exercise 15</span></a>
   </li>  
     </ul>
   </li>
@@ -290,7 +283,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">January 17, 2024</p>
+      <p class="date-modified">January 18, 2024</p>
     </div>
   </div>
     
@@ -656,14 +649,14 @@ Important
 </table>
 </div>
 </div>
-<p>Before we move to the next task, let's save od_data into an rds file by using the code chunk below.</p>
+<p>Before we move to the next task, let’s save od_data into an rds file by using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">#write_rds(od_data, "data/rds/od_data.rds")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="computing-distance-matrix" class="level3" data-number="3.4">
 <h3 data-number="3.4" class="anchored" data-anchor-id="computing-distance-matrix"><span class="header-section-number">3.4</span> <strong>Computing Distance Matrix</strong></h3>
-<p>In spatial interaction, a distance matrix is a table that shows the distance between pairs of locations. For example, in the table below we can see an Euclidean distance of 3926.0025 between MESZ01 and RVSZ05, of 3939.1079 between MESZ01 and SRSZ01, and so on. By definition, an location's distance from itself, which is shown in the main diagonal of the table, is 0.</p>
+<p>In spatial interaction, a distance matrix is a table that shows the distance between pairs of locations. For example, in the table below we can see an Euclidean distance of 3926.0025 between MESZ01 and RVSZ05, of 3939.1079 between MESZ01 and SRSZ01, and so on. By definition, an location’s distance from itself, which is shown in the main diagonal of the table, is 0.</p>
 <p><img src="figure/distance_matrix.png" class="img-fluid"></p>
 <section id="converting-from-sf-data.table-to-spatialpolygonsdataframe" class="level4" data-number="3.4.1">
 <h4 data-number="3.4.1" class="anchored" data-anchor-id="converting-from-sf-data.table-to-spatialpolygonsdataframe"><span class="header-section-number">3.4.1</span> Converting from sf data.table to SpatialPolygonsDataFrame</h4>
@@ -858,7 +851,7 @@ Tip
 </table>
 </div>
 </div>
-<p>Before moving on to the next task, let's save&nbsp;<em>flow_data</em>&nbsp;into an rds file by usign the code chunk below.</p>
+<p>Before moving on to the next task, let’s save&nbsp;<em>flow_data</em>&nbsp;into an rds file by usign the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">#write_rds(flow_data, "data/rds/mpsz_flow.rds")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1119,7 +1112,7 @@ $ FB_COUNT       &lt;int&gt; 4, 38, 4, 0, 38, 15, 5, 0, 20, 0, 9, 25, 0, 0, 9, 1
 $ LR_COUNT       &lt;int&gt; 3, 11, 7, 0, 20, 0, 0, 0, 19, 2, 4, 4, 1, 1, 13, 0, 17,…</code></pre>
 </div>
 </div>
-<p>Before moving to the next task, let's save&nbsp;<em>mpsz_var</em>&nbsp;into an rds file by using the code chunk below.</p>
+<p>Before moving to the next task, let’s save&nbsp;<em>mpsz_var</em>&nbsp;into an rds file by using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co">#write_rds(mpsz_var, "data/rds/mpsz_var.rds")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1336,8 +1329,8 @@ Warning
 <p>The three different estimators currently supported by spflow are:</p>
 <ul>
 <li><p><strong>Maximum Likelihood Estimation (MLE)</strong> which is the default estimation procedure. The matrix form estimation in the framework of this model was first developed by LeSage and Pace (2008) and then improved by Dargel (2021) . Spatial two-stage least squares (S2SLS)</p></li>
-<li><p><strong>Spatial Two-stage Least Squares (S2SLS)</strong> estimator is an adaptation of the one proposed by Kelejian and Prucha (1998), to the case of origin-destination flows, with up to three neighborhood matrices Dargel (2021). A similar estimation is done by Tamesue and Tsutsumi (2016). The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = "s2sls").</p></li>
-<li><p><strong>Bayesian Markov Chain Monte Carlo (MCMC)</strong> estimator is based on the ideas of LeSage and Pace (2009) and incorporates the improvements proposed in Dargel (2021) . The estimation is based on a tuned Metropolis-Hastings sampler for the auto-regressive parameters, and for the remaining parameters it uses Gibbs sampling. The routine uses 5500 iterations of the sampling procedure and considers the first 2500 as burn-in period. The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = "mcmc").</p></li>
+<li><p><strong>Spatial Two-stage Least Squares (S2SLS)</strong> estimator is an adaptation of the one proposed by Kelejian and Prucha (1998), to the case of origin-destination flows, with up to three neighborhood matrices Dargel (2021). A similar estimation is done by Tamesue and Tsutsumi (2016). The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = “s2sls”).</p></li>
+<li><p><strong>Bayesian Markov Chain Monte Carlo (MCMC)</strong> estimator is based on the ideas of LeSage and Pace (2009) and incorporates the improvements proposed in Dargel (2021) . The estimation is based on a tuned Metropolis-Hastings sampler for the auto-regressive parameters, and for the remaining parameters it uses Gibbs sampling. The routine uses 5500 iterations of the sampling procedure and considers the first 2500 as burn-in period. The user can activate the S2SLS estimation via the estimation_control argument using the input spflow_control(estimation_method = “mcmc”).</p></li>
 </ul>
 <p>Estimation with default settings requires two arguments: an <strong>sp_multi_network-class</strong> and a <strong>flow_formula</strong>. The flow_formula specifies the model we want to estimate. The function offers a formula interface adapted to spatial interaction models, which has the following structure: Y ~ O_(X1) + D_(X2) + I_(X3) + P_(X4). This structure reflects the different data sources involved in such a model. On the left hand side there is the independent variable Y which corresponds to the vector of flows. On the right hand side we have all the explanatory variables. The functions O_(…) and D_(…) indicate which variables are used as characteristics of the origins and destinations respectively. Similarly, I_(…) indicates variables that should be used for the intra-regional parameters. Finally, P_(…) declares which variables describe origin-destination pairs, which most frequently will include a measure of distance.</p>
 <p>All the declared variables must be available in the provided <code>spflow_network_multi()</code> object, which gathers information on the origins and destinations (inside <code>spflow_network()</code> objects), as well as the information on the origin-destination pairs (inside a <code>spflow_network_pair()</code> object).</p>
@@ -1372,27 +1365,27 @@ Dependent variable: log(1 + TRIPS)
 --------------------------------------------------
 Coefficients:
                           est     sd   t.stat  p.val
-rho_d                   0.680  0.004  192.555  0.000
-rho_o                   0.678  0.004  187.732  0.000
-rho_w                  -0.396  0.006  -65.591  0.000
-(Intercept)             0.410  0.065    6.266  0.000
-(Intra)                 1.313  0.081   16.263  0.000
+rho_d                   0.680  0.004  192.553  0.000
+rho_o                   0.678  0.004  187.725  0.000
+rho_w                  -0.396  0.006  -65.585  0.000
+(Intercept)             0.410  0.065    6.264  0.000
+(Intra)                 1.313  0.081   16.264  0.000
 D_SCHOOL_COUNT          0.017  0.002    7.885  0.000
-D_SCHOOL_COUNT.lag1     0.002  0.004    0.551  0.581
+D_SCHOOL_COUNT.lag1     0.002  0.004    0.550  0.582
 D_BUSINESS_COUNT        0.000  0.000    3.015  0.003
-D_BUSINESS_COUNT.lag1   0.000  0.000   -0.249  0.804
+D_BUSINESS_COUNT.lag1   0.000  0.000   -0.249  0.803
 D_RETAILS_COUNT         0.000  0.000   -0.306  0.759
-D_RETAILS_COUNT.lag1    0.000  0.000    0.152  0.880
+D_RETAILS_COUNT.lag1    0.000  0.000    0.152  0.879
 D_FINSERV_COUNT         0.002  0.000    6.787  0.000
 D_FINSERV_COUNT.lag1   -0.002  0.001   -3.767  0.000
 O_BUSSTOP_COUNT         0.002  0.000    6.806  0.000
 O_BUSSTOP_COUNT.lag1   -0.001  0.000   -2.364  0.018
 O_AGE25_64              0.000  0.000    7.336  0.000
 O_AGE25_64.lag1         0.000  0.000   -2.797  0.005
-P_log(DISTANCE + 1)    -0.050  0.007   -6.793  0.000
+P_log(DISTANCE + 1)    -0.050  0.007   -6.791  0.000
 
 --------------------------------------------------
-R2_corr: 0.6942945  
+R2_corr: 0.6942927  
 Observations: 97969  
 Model coherence: Validated</code></pre>
 </div>
@@ -1560,7 +1553,7 @@ Dependent variable: log(1 + TRIPS)
 --------------------------------------------------
 Coefficients:
                           est     sd   t.stat  p.val
-rho_d                   0.731  0.003  218.602  0.000
+rho_d                   0.731  0.003  218.603  0.000
 (Intercept)             3.068  0.067   45.899  0.000
 (Intra)                -0.398  0.093   -4.291  0.000
 D_SCHOOL_COUNT          0.063  0.003   24.291  0.000
